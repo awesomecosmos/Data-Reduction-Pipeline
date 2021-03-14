@@ -1,0 +1,320 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar  9 13:45:48 2021
+
+@author: ave41
+"""
+
+# drp_ccdproc_v2.py serves as a testing sandbox for drp_ccdproc_v1.py.
+
+###############################################################################
+#-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
+###############################################################################
+
+# basic Python packages
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+# path-type packages
+import os
+import glob
+from pathlib import Path
+
+# warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+# Astropy packages
+from astropy.io import fits
+from astropy import units as u
+from astropy.stats import mad_std
+from astropy.nddata import CCDData
+from astropy.utils.data import get_pkg_data_filename
+
+# ccdproc packages
+import ccdproc as ccdp
+from ccdproc import Combiner
+from ccdproc import ImageFileCollection
+from ccdproc.utils.sample_directory import sample_directory_with_files
+
+# user-defined packages
+from convenience_functions import show_image
+
+###############################################################################
+#-------------------SECTION TWO: HELPER FUNCTIONS-----------------------------# 
+###############################################################################
+
+def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
+    """
+    Find the nearest exposure time of a dark frame to the exposure time of the image,
+    raising an error if the difference in exposure time is more than tolerance.
+    
+    Source of this function: 
+    https://mwcraig.github.io/ccd-as-book/05-03-Calibrating-the-flats.html
+    
+    Parameters
+    ----------
+    
+    image : astropy.nddata.CCDData
+        Image for which a matching dark is needed.
+    
+    dark_exposure_times : list
+        Exposure times for which there are darks.
+    
+    tolerance : float or ``None``, optional
+        Maximum difference, in seconds, between the image and the closest dark. Set
+        to ``None`` to skip the tolerance test.
+    
+    Returns
+    -------
+    
+    float
+        Closest dark exposure time to the image.
+    """
+
+    dark_exposures = np.array(list(dark_exposure_times))
+    idx = np.argmin(np.abs(dark_exposures - image.header['exptime']))
+    closest_dark_exposure = dark_exposures[idx]
+
+    if (tolerance is not None and 
+        np.abs(image.header['exptime'] - closest_dark_exposure) > tolerance):
+        
+        raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
+                           'time {}.'.format(closest_dark_exposure, a_flat.header['exptime']))
+        
+    
+    return closest_dark_exposure
+
+#-----------------------------------------------------------------------------
+def chip_num_extractor(img):
+    """ This function extracts the chip number from the filename.
+    
+    Input parameter(s): 
+    * img - file path.
+      dtype: string
+      
+    Output parameter(s):
+    * number of chip
+      dtype: int 
+    """
+    return abs(int(img[-6:-4]))
+
+
+def chip_separator(IMAGElist, filetype):
+    """ This function creates an array of arrays containing the filenames for 
+    each chip.
+    
+    Input parameter(s): 
+    * IMAGElist - list of filenames.
+      dtype: list
+    * filetype - type of image, i.e. ALERT, DARKS or FLATS.
+      dtype: string
+      
+    Output parameter(s):
+    * chip_names_lst - array of arrays containing filenames for each chip.
+      dtype: list 
+    """
+    chip_names_lst = []    
+    for i in range(1,11):
+        chip_names = []
+        for j in IMAGElist:
+            if chip_num_extractor(j) == i:
+                chip_names.append(j)
+        chip_names_lst.append(chip_names)
+    return chip_names_lst
+
+###############################################################################
+#-------------------SECTION THREE: DATA REDUCTION-----------------------------# 
+###############################################################################
+
+#%%
+##-------------------------------BIASES--------------------------------------##
+
+# reading in bias files from BIAS folder
+# ensure there are no quicklooks (-0 or -99) otherwise will not work
+BIAS_path = Path('Obs Data/BIAS')
+BIAS_imgs = ImageFileCollection(BIAS_path, keywords='*')
+BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True)
+
+BIAS_chips_files = chip_separator(BIAS_files, 'BIAS')
+
+for index,BIAS_chips in enumerate(BIAS_chips_files):
+    # getting some numbers for display/saving purposes later
+    chip_num = chip_num_extractor(BIAS_chips_files[index][0])
+    num_of_biases = len(BIAS_chips_files[0])
+    
+    # converting each BIAS file to a fits array
+    BIAS_fits = [fits.getdata(BIAS_file) for BIAS_file in BIAS_chips]
+    # converting each BIAS array to a CCDData object
+    BIAS_ccd = [CCDData(BIAS_fit,unit=u.adu) for BIAS_fit in BIAS_fits]
+
+    # combining all the biases together
+    master_bias = ccdp.combine(BIAS_ccd,unit=u.adu,
+                              method='average',
+                              sigma_clip=True, 
+                              sigma_clip_low_thresh=5, 
+                              sigma_clip_high_thresh=5,
+                              sigma_clip_func=np.ma.median, 
+                              sigma_clip_dev_func=mad_std,
+                              mem_limit=350e6)
+    # setting combined bias header
+    master_bias.meta['combined'] = True
+    # writing combined bias as a fits file
+    master_bias.write(BIAS_path / 'master_bias_chip{}.fit'.format(chip_num),overwrite=True)
+
+    # plotting single bias compared to combined bias
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+    show_image(BIAS_ccd[0], cmap='gray', ax=ax1, fig=fig, percl=90)
+    ax1.set_title('Single calibrated bias for Chip {}'.format(chip_num))
+    show_image(master_bias.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+    ax2.set_title('{} bias images combined for Chip {}'.format(num_of_biases,chip_num))
+
+#%%
+##---------------------------------DARKS------------------------------------##
+
+# reading in dark files from DARKS folder
+# ensure there are no quicklooks (-0 or -99) otherwise will not work
+DARKS_path = Path('Obs Data/DARKS')
+DARKS_imgs = ImageFileCollection(DARKS_path, keywords='*')
+
+calibrated_darks_dir = os.path.join(DARKS_path,'Calibrated Darks')
+
+if os.path.isdir(calibrated_darks_dir) == False:
+    os.mkdir(calibrated_darks_dir)
+else:
+    pass
+
+DARKS_cal_path = Path(calibrated_darks_dir)
+
+# (8/3/21) will need to add an earlier section which stores the exptime of 
+# the science image to put in here, instead of 300
+DARKS_files = DARKS_imgs.files_filtered(EXPTIME=300,include_path=True)
+
+DARKS_chips_files = chip_separator(DARKS_files, 'DARKS')
+
+for index,DARKS_chips in enumerate(DARKS_chips_files):
+    # getting some numbers for display/saving purposes later
+    chip_num = chip_num_extractor(DARKS_chips_files[index][0])
+    num_of_biases = len(DARKS_chips_files[0])
+
+    # converting each DARKS file to a fits array
+    DARKS_fits = [fits.getdata(DARKS_file) for DARKS_file in DARKS_chips]
+    # converting each DARKS array to a CCDData object
+    DARKS_ccd = [CCDData(DARKS_fit,unit=u.adu) for DARKS_fit in DARKS_fits]
+
+     
+    for j in range(len(DARKS_ccd)):
+        # Subtract bias from each Dark
+        ccd = ccdp.subtract_bias(DARKS_ccd[j], master_bias)
+        # Save the result
+        filename = DARKS_chips[j][-18:-4]
+        ccd.write(DARKS_cal_path / "calibrated_dark_{}.fit".format(filename),overwrite=True)
+
+#%%
+# reading in calibrated dark files from DARKS folder
+DARKS_cal_imgs = ImageFileCollection(DARKS_cal_path, keywords='*')
+DARKS_cal_files = DARKS_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',include_path=True)
+
+DARKS_cal_chips_files = chip_separator(DARKS_cal_files, 'DARKS')
+
+for index,DARKS_chips in enumerate(DARKS_cal_chips_files):
+    # getting some numbers for display/saving purposes later
+    chip_num = chip_num_extractor(DARKS_cal_chips_files[index][0])
+    num_of_biases = len(DARKS_cal_chips_files[0])
+    
+    # converting each DARKS file to a fits array
+    DARKS_cal_fits = [fits.getdata(DARKS_cal_file) for DARKS_cal_file in DARKS_chips]
+    # converting each DARKS array to a CCDData object
+    DARKS_cal_ccd = [CCDData(DARKS_cal_fit,unit=u.adu) for DARKS_cal_fit in DARKS_cal_fits]
+    
+    # combining all the darks together
+    master_dark = ccdp.combine(DARKS_cal_ccd,unit=u.adu,
+                              method='average',
+                              sigma_clip=True, 
+                              sigma_clip_low_thresh=5, 
+                              sigma_clip_high_thresh=5,
+                              sigma_clip_func=np.ma.median, 
+                              sigma_clip_dev_func=mad_std,
+                              mem_limit=350e6)
+    # setting combined dark header
+    master_dark.meta['combined'] = True
+    # writing combined dark as a fits file
+    master_dark.write(DARKS_cal_path / 'master_dark_chip{}.fit'.format(chip_num),overwrite=True)
+
+    # plotting single dark compared to combined dark
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+    show_image(DARKS_cal_ccd[0], cmap='gray', ax=ax1, fig=fig, percl=90)
+    ax1.set_title('Single calibrated dark for Chip {}'.format(chip_num))
+    show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+    ax2.set_title('{} dark images combined for Chip {}'.format(num_of_biases,chip_num))
+
+
+
+#%%
+# ##--------------------------------FLATS-----------------------------------##
+# # (8/3/21) currently this section combines all the chips
+# # will need to sort this out
+# ##------------------------------##
+# # FLATS_path = Path('Obs Data/FLATS')
+# # FLATS_imgs = ImageFileCollection(FLATS_path, keywords='*')
+
+# # # (8/3/21) will need to add an earlier section which stores the exptime of 
+# # # the science image to put in here, instead of 300
+# # FLATS_files = FLATS_imgs.files_filtered(FIELD ='              flat',include_path=True)
+
+# # # converting each DARKS file to a fits array
+# # FLATS_fits = [fits.getdata(FLATS_file) for FLATS_file in FLATS_files]
+# # # converting each BIAS array to a CCDData object
+# # FLATS_ccd = [CCDData(FLATS_fit,unit=u.adu) for FLATS_fit in FLATS_fits]
+
+
+# pseudocode for first section of FLATS:
+# flats_exp_times = []
+# for FLAT in FLATS:
+    # exptime = exptime(from header)
+    # flats_exp_times.append(exptime)
+
+# change dir to DARKS
+# use calibrated darks path
+# for DARK in DARKS:
+    # exptime_darks = exptime(from header)
+    # for flat_exp in flats_exp_times:
+        # if flat_exp == exptime_darks:
+            # save DARK to new folder in FLATS folder called 'Cal Darks for Flats'
+        # else:
+            # pass
+#https://mwcraig.github.io/ccd-as-book/05-03-Calibrating-the-flats.html        
+        
+
+
+
+#%%
+
+ifc_reduced = ccdp.ImageFileCollection(DARKS_cal_path)
+# combined_dark_files = ifc_reduced.files_filtered(EXPTIME=300,combined=True)
+# combined_dark_files = ifc_reduced.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',combined=True)
+combined_dark_files = ifc_reduced.files_filtered(SIMPLE=True,combined=True)
+flat_image_type = '              flat'
+
+#%%
+
+n_combined_dark = len(combined_dark_files)
+expected_exposure_times = set([5, 10, 20, 30])
+
+if n_combined_dark < 10:
+    raise RuntimeError('One or more combined dark is missing. Please re-run the dark notebook.')
+elif n_combined_dark > 10:
+    raise RuntimeError('There are more combined dark frames than expected.')
+    
+actual_exposure_times = set(h['exptime'] for h in ifc_reduced.headers(imagetyp='dark', combined=True))
+
+if (expected_exposure_times - actual_exposure_times):
+    raise RuntimeError('Encountered unexpected exposure time in combined darks. '
+                       'The unexpected times are {}'.format(actual_exposure_times - expected_exposure_times))
+
+
+
+
+
