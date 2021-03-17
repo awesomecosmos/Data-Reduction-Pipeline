@@ -5,8 +5,6 @@ Created on Tue Mar  9 13:45:48 2021
 @author: ave41
 """
 
-# drp_ccdproc_v2.py serves as a testing sandbox for drp_ccdproc_v1.py.
-
 ###############################################################################
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
 ###############################################################################
@@ -102,15 +100,13 @@ def chip_num_extractor(img):
     return abs(int(img[-6:-4]))
 
 
-def chip_separator(IMAGElist, filetype):
+def chip_separator(IMAGElist):
     """ This function creates an array of arrays containing the filenames for 
     each chip.
     
     Input parameter(s): 
     * IMAGElist - list of filenames.
       dtype: list
-    * filetype - type of image, i.e. ALERT, DARKS or FLATS.
-      dtype: string
       
     Output parameter(s):
     * chip_names_lst - array of arrays containing filenames for each chip.
@@ -241,13 +237,58 @@ for DARK_chips in DARK_chips_files:
                   / "calibrated_dark-{}-{}-{}-{}.fit".format(file_name,exptime,
                                                             obs_set,chip_num),
                                                             overwrite=True)
+#%%
+    chip_names_lst = []    
+    for i in range(1,11):
+        chip_names = []
+        for j in IMAGElist:
+            if chip_num_extractor(j) == i:
+                chip_names.append(j)
+        chip_names_lst.append(chip_names)
+    return chip_names_lst
 
+def exptime_checker(IMAGElist):
+    filename = []
+    exptimes = []
+    for image in IMAGElist:
+        hdu1 = fits.open(image)
+        exptime = hdu1[0].header['EXPTIME']
+        if exptime not in exptimes:
+            exptimes.append(exptime)
+        else:
+            pass
+    return exptimes
+
+def exptime_separator(IMAGElist):
+    
+        
+        
+    
+
+
+
+# def exptime_separator(chip_separated_lst):
+#     exptimes = []
+#     exptime_names_lst = []
+#     for chip in chip_separated_lst:
+#         # extracting header data for display/saving purposes later
+#         hdu1 = fits.open(image)
+#         exptime = hdu1[0].header['EXPTIME']
+#         exptimes.append(exptime)
+    
+#     for exptime in exptimes:
+#         if hdu1[0].header['EXPTIME'] == exptime:
+#             exptime_names_lst.append(image)
+    
 #%%
 ##----------------------------MAKING MASTER DARKS----------------------------##
 # reading in calibrated dark files from Calibrated Darks folder
-DARK_cal_imgs = ImageFileCollection(DARK_cal_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',include_path=True)
-DARK_cal_chips_files = chip_separator(DARK_cal_files,'DARKS')
+    # excluding non-science quicklook images and biases
+DARK_cal_imgs = ImageFileCollection(DARK_cal_path,
+                                    glob_exclude=['/*-0.fit','/*-99.fit','*-1-*.fit'])
+DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+DARK_cal_chips_files = chip_separator(DARK_cal_files)
 
 # making/checking MDARK path/folder
 MDARK_path = path_checker(DARK_path,'Master Darks')
@@ -255,6 +296,7 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 for DARK_chips in DARK_cal_chips_files:
     # making/re-setting folder to store CCD darks for each chip
     chip_n_darks_lst = []
+    exptimes = []
     
     # for each file for each chip number:
     for DARK_file in DARK_chips:
@@ -264,6 +306,7 @@ for DARK_chips in DARK_cal_chips_files:
         exptime = hdu1[0].header['EXPTIME']
         obs_set = hdu1[0].header['SET'].strip(' ')
         chip_num = hdu1[0].header['CHIP']
+        exptimes.append(exptime)
         
         # converting each DARKS file to a fits array
         DARK_cal_fits = fits.getdata(DARK_file) 
