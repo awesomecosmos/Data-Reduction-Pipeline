@@ -5,8 +5,6 @@ Created on Tue Mar  9 13:45:48 2021
 @author: ave41
 """
 
-# drp_ccdproc_v2.py serves as a testing sandbox for drp_ccdproc_v1.py.
-
 ###############################################################################
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
 ###############################################################################
@@ -102,15 +100,13 @@ def chip_num_extractor(img):
     return abs(int(img[-6:-4]))
 
 
-def chip_separator(IMAGElist, filetype):
+def chip_separator(IMAGElist):
     """ This function creates an array of arrays containing the filenames for 
     each chip.
     
     Input parameter(s): 
     * IMAGElist - list of filenames.
       dtype: list
-    * filetype - type of image, i.e. ALERT, DARKS or FLATS.
-      dtype: string
       
     Output parameter(s):
     * chip_names_lst - array of arrays containing filenames for each chip.
@@ -153,6 +149,64 @@ def path_checker(origin_path,folder_name):
     new_path = Path(new_dir)
     return new_path
 
+def exptime_checker(IMAGElist):
+    """
+    This function creates a list of all exposure times from a list of FITS files.
+    
+    Parameters
+    ----------
+    IMAGElist : list
+        List of FITS filenames from which the exposure times are to be extracted.
+        FITS files must have header keyword 'EXPTIME'.
+    
+    Returns
+    -------
+    exptimes: list
+        List of exposure times for the IMAGElist.
+    """
+    exptimes = []
+    for image in IMAGElist:
+        hdu1 = fits.open(image)
+        exptime = hdu1[0].header['EXPTIME']
+        if exptime not in exptimes:
+            # this condition is to ensure that we don't have a list with 
+            # repeating exposure times.
+            exptimes.append(exptime)
+        else:
+            pass
+    return exptimes
+
+def exptime_separator(IMAGElist):
+    """
+    This function creates a array of arrays of FITS files, where each sub-array
+    contains the filenames for an exposure length from the function 
+    exptime_checker(IMAGElist).
+    
+    Parameters
+    ----------
+    IMAGElist : list
+        List of FITS filenames from which the exposure times are to be extracted.
+        FITS files must have header keyword 'EXPTIME'.
+    
+    Returns
+    -------
+    exptimes_lst: list
+        List of lists of filenames for each exposure length.
+    """
+    exptimes_lst = []
+    # getting the exposure lengths from the image list
+    exptimes = exptime_checker(IMAGElist)
+    for i in range(len(exptimes)):
+        exptime_files = []
+        for j in IMAGElist:
+             hdu1 = fits.open(j)
+             exptime_of_file = hdu1[0].header['EXPTIME']
+             # checking if each file matches the exposure length
+             if exptime_of_file == exptimes[i]:
+                 exptime_files.append(j)
+        exptimes_lst.append(exptime_files)    
+    return exptimes_lst
+
 ###############################################################################
 #-------------------SECTION THREE: DATA REDUCTION-----------------------------# 
 ###############################################################################
@@ -168,7 +222,7 @@ MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # selecting images
 BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True)
-BIAS_chips_files = chip_separator(BIAS_files,'BIAS')
+BIAS_chips_files = chip_separator(BIAS_files)
 
 for index,BIAS_chips in enumerate(BIAS_chips_files):
     # getting some numbers for display/saving purposes later
@@ -212,9 +266,10 @@ DARK_imgs = ImageFileCollection(DARK_path,glob_exclude=['/*-0.fit','/*-99.fit'])
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
 
 DARK_files = DARK_imgs.files_filtered(FIELD='              dark',include_path=True)
-DARK_chips_files = chip_separator(DARK_files, 'DARKS')
+DARK_chips_files = chip_separator(DARK_files)
 
 for DARK_chips in DARK_chips_files:
+    
     for DARK_file in DARK_chips:
         # extracting header data for display/saving purposes later
         hdu1 = fits.open(DARK_file)
@@ -231,7 +286,7 @@ for DARK_chips in DARK_chips_files:
         # Subtract bias from each Dark
         ccd = ccdp.subtract_bias(DARK_ccd, master_bias)
         # setting combined dark header
-        #ccd.meta['calibrated'] = True
+        ccd.meta['calibrated'] = 'True'
         ccd.meta['RUN'] = file_name
         ccd.meta['EXPTIME'] = exptime
         ccd.meta['SET'] = obs_set
@@ -239,41 +294,39 @@ for DARK_chips in DARK_chips_files:
         # Save the result
         ccd.write(DARK_cal_path 
                   / "calibrated_dark-{}-{}-{}-{}.fit".format(file_name,exptime,
-                                                            obs_set,chip_num),
-                                                            overwrite=True)
-
+                                                             obs_set,chip_num),
+                                                                overwrite=True)
+    
 #%%
 ##----------------------------MAKING MASTER DARKS----------------------------##
 # reading in calibrated dark files from Calibrated Darks folder
-DARK_cal_imgs = ImageFileCollection(DARK_cal_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',include_path=True)
-DARK_cal_chips_files = chip_separator(DARK_cal_files,'DARKS')
+# excluding non-science quicklook images and biases
+DARK_cal_imgs = ImageFileCollection(DARK_cal_path,
+                                    glob_exclude=['/*-0.fit','/*-99.fit','/*-1-*.fit'])
+DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+DARK_cal_chips_files = chip_separator(DARK_cal_files)
 
 # making/checking MDARK path/folder
 MDARK_path = path_checker(DARK_path,'Master Darks')
 
 for DARK_chips in DARK_cal_chips_files:
-    # making/re-setting folder to store CCD darks for each chip
-    chip_n_darks_lst = []
+    # seperating list of files by their exposure lengths
+    exptime_seperated_files = exptime_separator(DARK_chips)
     
-    # for each file for each chip number:
-    for DARK_file in DARK_chips:
-        # extracting header data for display/saving purposes later
-        hdu1 = fits.open(DARK_file)
-        file_name = hdu1[0].header['RUN'].strip(' ')
+    # for each array of files for each exposure length:
+    for exptime_seperated_exps in exptime_seperated_files:
+        # extracting header information for this set of files
+        hdu1 = fits.open(exptime_seperated_exps[0])
         exptime = hdu1[0].header['EXPTIME']
-        obs_set = hdu1[0].header['SET'].strip(' ')
         chip_num = hdu1[0].header['CHIP']
         
-        # converting each DARKS file to a fits array
-        DARK_cal_fits = fits.getdata(DARK_file) 
-        # converting each DARK array to a CCDData object
-        DARK_cal_ccd = CCDData(DARK_cal_fits,unit=u.adu)
-        # appending each DARK CCD file to the list (for each chip)
-        chip_n_darks_lst.append(DARK_cal_ccd)
+        # getting CCD image for plotting purposes
+        dark_fits = fits.getdata(exptime_seperated_exps[0]) 
+        dark_ccd = CCDData(dark_fits,unit=u.adu) 
 
-    # combining all the darks together
-    master_dark = ccdp.combine(chip_n_darks_lst,unit=u.adu,
+        # combining all the darks of this set together
+        master_dark = ccdp.combine(exptime_seperated_exps,unit=u.adu,
                               method='average',
                               sigma_clip=True, 
                               sigma_clip_low_thresh=5, 
@@ -281,27 +334,25 @@ for DARK_chips in DARK_cal_chips_files:
                               sigma_clip_func=np.ma.median, 
                               sigma_clip_dev_func=mad_std,
                               mem_limit=350e6)
-    # setting combined dark header
-    master_dark.meta['combined'] = True
-    # writing combined dark as a fits file
-    master_dark.write(MDARK_path / 'mdark-{}-chip{}.fit'.format(exptime,
-                                                                chip_num),
-                                                          overwrite=True)
-    # writing keywords to header
-    ccd.meta['RUN'] = file_name
-    ccd.meta['EXPTIME'] = exptime
-    ccd.meta['SET'] = obs_set
-    ccd.meta['CHIP'] = chip_num
+        
+        # writing keywords to header
+        master_dark.meta['combined'] = True
+        master_dark.meta['EXPTIME'] = exptime
+        master_dark.meta['CHIP'] = chip_num
+        
+        # writing combined dark as a fits file
+        master_dark.write(MDARK_path / 'mdark-{}-chip{}.fit'.format(exptime,
+                                                                  chip_num),
+                                                             overwrite=True)
 
-    # plotting single dark compared to combined dark
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+        # plotting single dark compared to combined dark
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
         #plotting single dark for current chip
-    show_image(chip_n_darks_lst[0], cmap='gray', ax=ax1, fig=fig, percl=90)
-    ax1.set_title('Single calibrated dark for Chip {}'.format(chip_num))
+        show_image(dark_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
+        ax1.set_title('Single calibrated dark for Chip {}'.format(chip_num))
         # plotting combined dark for current chip
-    show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
-    ax2.set_title('{}s Master Dark for Chip {}'.format(exptime,chip_num))
-
+        show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+        ax2.set_title('{}s Master Dark for Chip {}'.format(exptime,chip_num))
 
 
 #%%
