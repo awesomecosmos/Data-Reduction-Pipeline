@@ -55,9 +55,19 @@ if __name__ == '__main__':
     
     
     
-    
-    
-    
+# tests to write:
+# chip_num_extractor(img)
+    # 1. img is string
+    # 2. img header has keyword CHIP
+# chip_separator(IMAGElist)
+    # 1. IMAGElist is list
+    # 2. IMAGElist[i] is string
+# path_checker(origin_path,folder_name)
+    # 1. origin_path is Pathobject
+    # 2. folder_name is string
+    # 3. os is imported?
+    # 4. the os in which we are running this code is Windows?
+
     
     
     
