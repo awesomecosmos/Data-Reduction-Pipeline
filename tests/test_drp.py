@@ -5,17 +5,16 @@ Created on Tue Apr  6 12:15:37 2021
 
 @author: ave41
 """
-
+# importing drp functions from /src/ folder
 import sys
-sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\DataReductionPipeline\\drp\\src")
-from drp import chip_num_extractor
+sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\DataReductionPipeline\\src")
+from drp_funcs import *
 
 import unittest
-from astropy.io import fits
     
 class Test(unittest.TestCase):
     def test_chipNumExtractor1_success(self):
-        good_fits = "C://Users//ave41//OneDrive - University of Canterbury//Master's 2021//ASTR480 Research//ASTR480 Code//Data Reduction Pipeline//DataReductionPipeline//test//D21350-60-a-5.fit"
+        good_fits = "C://Users//ave41//OneDrive - University of Canterbury//Master's 2021//ASTR480 Research//ASTR480 Code//Data Reduction Pipeline//DataReductionPipeline//tests//D21350-60-a-5.fit"
         actual = chip_num_extractor(good_fits)
         expected = 5
         self.assertEqual(actual,expected)
