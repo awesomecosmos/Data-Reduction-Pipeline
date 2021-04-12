@@ -5,3 +5,20 @@ This GitHub repository contains all relevant files and outputs relating to this 
 **Developer:** Aayushi Verma 
 
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+
+## Directory Structure
+```
+Data-Reduction-Pipeline
+├── .gitattributes
+├── .gitignore.txt
+├── __init__.py
+├── README.md
+├── src
+│   ├── __init__.py         
+│   └── drp.py
+│   └── drp_code.py
+|   └── covenience_functions.py
+└── tests
+    ├── __init__.py         
+    └── test_drp.py
+```
