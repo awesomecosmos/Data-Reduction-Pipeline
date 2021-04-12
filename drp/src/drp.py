@@ -9,6 +9,9 @@ Created on Tue Mar  9 13:45:48 2021
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
 ###############################################################################
 
+# def add():
+#     pass
+
 # basic Python packages
 import numpy as np
 import matplotlib
@@ -302,6 +305,9 @@ def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files):
             dark_exptime = hdu1[0].header['EXPTIME']
             d_obs_set = hdu1[0].header['SET'].strip(' ')
             d_chip_num = hdu1[0].header['CHIP']
+            
+            img_name = '{}-{}-{}-{}.fit'.format(d_file_name,dark_exptime,
+                                                d_obs_set,d_chip_num)
     
             # converting each DARKS file to a fits array
             DARK_fits = fits.getdata(DARK_file) 
@@ -318,11 +324,7 @@ def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files):
             ccd.meta['CHIP'] = d_chip_num
             # Save the result
             ccd.write(DARK_cal_path 
-                  / "calibrated_dark-{}-{}-{}-{}.fit".format(d_file_name,
-                                                             dark_exptime,
-                                                             d_obs_set,
-                                                             d_chip_num),
-                                                             overwrite=True)
+                  / "calibrated_dark-{}".format(img_name),overwrite=True)
             
             
 def mdark_maker(dark_chip_sep_files,MDARK_path):
