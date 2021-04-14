@@ -25,6 +25,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Astropy packages
+import astropy
 from astropy.io import fits
 import astropy.units as u
 from astropy.stats import mad_std
