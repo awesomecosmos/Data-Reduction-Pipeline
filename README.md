@@ -15,8 +15,8 @@ Data-Reduction-Pipeline
 ├── README.md
 ├── src
 │   ├── __init__.py         
-│   └── drp.py
 │   └── drp_code.py
+│   └── drp_funcs.py
 |   └── covenience_functions.py
 └── tests
     ├── __init__.py         
