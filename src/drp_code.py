@@ -37,7 +37,7 @@ MBIAS_chips_files = chip_separator(MBIAS_files)
 #%%
 ##-----------------------------CALIBRATING DARKS-----------------------------##
 # reading in dark files from DARK folder
-DARK_path = Path('ObsData_v3/DARK')
+DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
 DARK_imgs = ImageFileCollection(DARK_path,glob_exclude=['/*-0.fit','/*-99.fit'])
 
 # making/checking Calibrated Darks path/folder
@@ -48,7 +48,7 @@ DARK_files = DARK_imgs.files_filtered(FIELD='              dark',include_path=Tr
 DARK_chips_files = chip_separator(DARK_files)
 
 # calling dark_calibrator function to calibrate all the darks 
-dark_calibrator(DARK_chips_files,MBIAS_chips_files)
+dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
 
 # reading in calibrated dark files from Calibrated Darks folder
 # ,glob_exclude=['/*-0.fit','/*-99.fit','/*-1-*.fit']

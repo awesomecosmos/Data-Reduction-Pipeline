@@ -12,7 +12,8 @@ from drp_funcs import *
 
 import unittest
     
-class Test(unittest.TestCase):
+class Test(unittest.TestCase):  
+#------------------------------------------------------------------------------
     def test_chipNumExtractor1(self):
         """
         Tests if the original function provides the expected output on a 
@@ -64,7 +65,21 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The FITS image has not been able to convert to a astropy.nddata.ccddata.CCDData object.")
-        
+#------------------------------------------------------------------------------  
+    
+    # def test_chipSeparator1(self):
+    #     """
+    #     Tests if the original function provides the expected output on a 
+    #     test fits file.
+    #     """
+    #     try:
+    #         test_lst = [[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]
+    #         func = chip_separator(good_fits)
+    #         actual = type(func)
+    #         expected = list
+    #         self.assertEqual(actual,expected)
+    #     except:
+    #         print("There's something wrong with chip_num_extractor. Not providing expected output.")
 
 if __name__ == '__main__':
     unittest.main()
