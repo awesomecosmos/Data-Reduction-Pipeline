@@ -1,8 +1,14 @@
+27/4/21
+- test_drp.py 
+	[] write more unit tests
+- drp_funcs.py
+	[] refactor it into 2 classes?
+	
 12/4/21
 - test_drp.py 
-	- write more unit tests
+	[x] write more unit tests
 - drp_funcs.py
-	- refactor it into 2 classes?
+	[] refactor it into 2 classes?
 - drp_code.py
-	- clean up code
-	- fix code
+	[x] clean up code
+	[x] fix code
