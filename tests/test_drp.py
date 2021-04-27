@@ -67,44 +67,72 @@ class Test(unittest.TestCase):
             print("The FITS image has not been able to convert to a astropy.nddata.ccddata.CCDData object.")
 #------------------------------------------------------------------------------  
     
-    # def test_chipSeparator1(self):
-    #     """
-    #     Tests if the original function provides the expected output on a 
-    #     test fits file.
-    #     """
-    #     try:
-    #         test_lst = [[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]
-    #         func = chip_separator(good_fits)
-    #         actual = type(func)
-    #         expected = list
-    #         self.assertEqual(actual,expected)
-    #     except:
-    #         print("There's something wrong with chip_num_extractor. Not providing expected output.")
+    def test_chipSeparator1(self):
+        """
+        Tests if the input is a list.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+        BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True)
+        try:
+            test_lst = BIAS_files
+            func = chip_separator(test_lst)
+            actual = type(func)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The input is not a list.")
+            
+    def test_chipSeparator2(self):
+        """
+        Tests if the content in the input list is a string.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+        BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True)
+        try:
+            test_lst = BIAS_files
+            func = chip_separator(test_lst)
+            actual = type(func[0][0])
+            expected = str
+            self.assertEqual(actual,expected)
+        except:
+            print("The information inside the input list is not of type 'string'.")
+#------------------------------------------------------------------------------  
 
+    def test_path_checker1(self):
+        """
+        Tests if the input Path is a PathObject.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        try:
+            actual = str(type(BIAS_path))
+            expected = 'WindowsPath'
+            self.assertEqual(actual,expected)
+        except:
+            print("There's something wrong with path_checker. Not providing expected output.")
+            
+#=============================================================================#
 if __name__ == '__main__':
     unittest.main()
-    
-    
-    
-    
-    
+#=============================================================================#
+
     
 # tests to write:
-# chip_num_extractor(img)
-    # 1. img is string
-    # 2. img header has keyword CHIP
-    # 3/ img is np.array
-# chip_separator(IMAGElist)
-    # 1. IMAGElist is list
-    # 2. IMAGElist[i] is string
 # path_checker(origin_path,folder_name)
     # 1. origin_path is Pathobject
     # 2. folder_name is string
     # 3. os is imported?
     # 4. the os in which we are running this code is Windows?
 
-    
-    
+# already written:
+# chip_num_extractor(img)
+    # 1. img is string
+    # 2. img header has keyword CHIP
+    # 3/ img is np.array
+# chip_separator(IMAGElist)
+    # 1. IMAGElist is list
+    # 2. IMAGElist[i] is string   
     
     
     
