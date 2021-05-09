@@ -106,12 +106,29 @@ class Test(unittest.TestCase):
         """
         BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
         try:
+            # actual = str(type(BIAS_path))
             actual = str(type(BIAS_path))
-            expected = 'WindowsPath'
+            expected = 'pathlib.WindowsPath'
             self.assertEqual(actual,expected)
         except:
             print("There's something wrong with path_checker. Not providing expected output.")
             
+    def test_path_checker2(self):
+        """
+        Tests if the input folder_name is a string.
+        """
+        folder_name = 'Master Biases'
+        try:
+            actual = type(folder_name)
+            expected = str
+            self.assertEqual(actual,expected)
+        except:
+            print("The input folder_name is not a string. It should be a string.")
+            
+#------------------------------------------------------------------------------  
+
+
+
 #=============================================================================#
 if __name__ == '__main__':
     unittest.main()
@@ -120,19 +137,19 @@ if __name__ == '__main__':
     
 # tests to write:
 # path_checker(origin_path,folder_name)
-    # 1. origin_path is Pathobject
-    # 2. folder_name is string
+    # 1. origin_path is Pathobject [done - but not working]
+    # 2. folder_name is string [done]
     # 3. os is imported?
     # 4. the os in which we are running this code is Windows?
 
 # already written:
 # chip_num_extractor(img)
-    # 1. img is string
-    # 2. img header has keyword CHIP
-    # 3/ img is np.array
+    # 1. img is string [done]
+    # 2. img header has keyword CHIP [done]
+    # 3/ img is np.array [done]
 # chip_separator(IMAGElist)
-    # 1. IMAGElist is list
-    # 2. IMAGElist[i] is string   
+    # 1. IMAGElist is list [done]
+    # 2. IMAGElist[i] is string [done]
     
     
     

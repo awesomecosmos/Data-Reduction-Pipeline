@@ -1,3 +1,4 @@
 /Obs Data/
 /Obs Data_old/
 /test/*.fit
+/Histogram Plots/

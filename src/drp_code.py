@@ -93,7 +93,7 @@ mdark_maker(DARK_cal_chips_files,MDARK_path)
 
 # ##--------------------------------FLATS-----------------------------------##
 
-FLAT_path = Path('ObsData_v3/FLAT')
+FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/FLAT")
 # FLAT_imgs = ImageFileCollection(FLAT_path,glob_exclude=['*-0.fit','*-99.fit'])
 
 to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',

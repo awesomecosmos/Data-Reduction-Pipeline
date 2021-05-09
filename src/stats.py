@@ -50,6 +50,8 @@ from ccdproc import Combiner
 from ccdproc import ImageFileCollection
 from ccdproc.utils.sample_directory import sample_directory_with_files
 
+import seaborn as sns
+
 # user-defined packages
 from convenience_functions import show_image
 
@@ -59,37 +61,41 @@ def img_stats(img_list):
     for img in img_list:
         image_data = fits.getdata(img)
         
-        # extracting data from header for display purposes
-        hdu1 = fits.open(img)
-        file_name = hdu1[0].header['RUN'].strip(' ')
-        exptime = hdu1[0].header['EXPTIME']
-        obs_set = hdu1[0].header['SET'].strip(' ')
-        chip_num = hdu1[0].header['CHIP']
+        # # extracting data from header for display purposes
+        # hdu1 = fits.open(img)
+        # file_name = hdu1[0].header['RUN'].strip(' ')
+        # exptime = hdu1[0].header['EXPTIME']
+        # obs_set = hdu1[0].header['SET'].strip(' ')
+        # chip_num = hdu1[0].header['CHIP']
         
-        img_name = '{}-{}-{}-{}.fit'.format(file_name,exptime,obs_set,chip_num)
+        # img_name = '{}-{}-{}-{}.fit'.format(file_name,exptime,obs_set,chip_num)
 
-        # getting statistical data
-        img_min = np.min(image_data)
-        img_max = np.max(image_data)
-        img_mean = np.mean(image_data)
-        # img_std = np.std(image_data)
+        # # getting statistical data
+        # img_min = np.min(image_data)
+        # img_max = np.max(image_data)
+        # img_mean = np.mean(image_data)
+        # # img_std = np.std(image_data)
         
-        # setting number of bins 
-        NBINS = 100
+        # # setting number of bins 
+        # NBINS = 100
         
         # plotting figure
         plt.figure()
-        plt.hist(image_data.flatten(),bins=NBINS,label='counts')
-        plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
-        plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
-        plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
-        plt.legend()
-        plt.grid()
-        plt.xlabel('Count level in image')
-        plt.ylabel('Number of pixels with that count')
-        plt.title('Histogram of counts of {}'.format(img_name))
-        plt.savefig("hist_{}.jpg".format(img_name))
+        sns.set_theme(style="whitegrid")
+        ax = sns.violinplot(x=image_data.flatten())
         plt.show()
+        # plt.figure()
+        # plt.hist(image_data.flatten(),bins=NBINS,label='counts')
+        # plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
+        # plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
+        # plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
+        # plt.legend()
+        # plt.grid()
+        # plt.xlabel('Count level in image')
+        # plt.ylabel('Number of pixels with that count')
+        # plt.title('Histogram of counts of {}'.format(img_name))
+        # plt.savefig("hist_{}.jpg".format(img_name))
+        # plt.show()
 
 # reading in bias files from BIAS folder
 BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
