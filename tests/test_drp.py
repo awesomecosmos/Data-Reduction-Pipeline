@@ -126,6 +126,42 @@ class Test(unittest.TestCase):
             print("The input folder_name is not a string. It should be a string.")
             
 #------------------------------------------------------------------------------  
+    def test_exptime_checker1(self):
+        """
+        Tests if IMAGElist is a list.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist = DARK_cal_chips_files[0]
+        try:
+            actual = type(IMAGElist)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The input IMAGElist is not a list. It should be a list.")
+            
+    def test_exptime_checker2(self):
+        """
+        Tests if IMAGElist[i] is a string.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist_component = DARK_cal_chips_files[0][0]
+        try:
+            actual = type(IMAGElist_component)
+            expected = str
+            self.assertEqual(actual,expected)
+        except:
+            print("The input IMAGElist[0] is not a str. It should be a str.")
+    
 
 
 
@@ -141,6 +177,11 @@ if __name__ == '__main__':
     # 2. folder_name is string [done]
     # 3. os is imported?
     # 4. the os in which we are running this code is Windows?
+# exptime_checker(IMAGElist)
+    # 1. IMAGElist is list [done]
+    # 2. IMAGElist[i] is str [done]
+    # 3. IMAGElist has dimensions 10 [not needed]
+    
 
 # already written:
 # chip_num_extractor(img)
@@ -152,7 +193,24 @@ if __name__ == '__main__':
     # 2. IMAGElist[i] is string [done]
     
     
-    
+# not needed:
+    # def test_exptime_checker3(self):
+    #     """
+    #     Tests if len(IMAGElist) == 10, one for each chip.
+    #     """
+    #     DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+    #     DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+    #     DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+    #     DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+    #                                           include_path=True)
+    #     DARK_cal_chips_files = chip_separator(DARK_cal_files)
+    #     IMAGElist = DARK_cal_chips_files[0]
+    #     try:
+    #         actual = len(IMAGElist)
+    #         expected = 10
+    #         self.assertEqual(actual,expected)
+    #     except:
+    #         print("The length of IMAGElist is not 10. It should be 10, one for each chip.")   
     
     
     
