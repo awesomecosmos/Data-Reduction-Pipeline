@@ -1,14 +1,7 @@
-27/4/21
-- test_drp.py 
-	- [ ] write more unit tests
-- drp_funcs.py
-	- [ ] refactor it into 2 classes?
-	
-12/4/21
-- test_drp.py 
-	- [x] write more unit tests
-- drp_funcs.py
-	- [ ] refactor it into 2 classes?
-- drp_code.py
-	- [x] clean up code
-	- [x] fix code
+19/5/21
+- master_drp_runner.py
+	[ ] fix dict problem
+- stats.py
+	[ ] clean up code
+	[ ] add to drp_funcs.py
+	[ ] add to drp_code.py
