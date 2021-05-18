@@ -100,6 +100,19 @@ class Test(unittest.TestCase):
             print("The information inside the input list is not of type 'string'.")
 #------------------------------------------------------------------------------  
 
+    # def test_path_checker1(self):
+    #     """
+    #     Tests if the input Path is a PathObject.
+    #     """
+    #     BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+    #     try:
+    #         # actual = str(type(BIAS_path))
+    #         actual = str(type(BIAS_path))
+    #         expected = 'pathlib.WindowsPath'
+    #         self.assertEqual(actual,expected)
+    #     except:
+    #         print("There's something wrong with path_checker. Not providing expected output.")
+    
     def test_path_checker1(self):
         """
         Tests if the input Path is a PathObject.
@@ -107,9 +120,9 @@ class Test(unittest.TestCase):
         BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
         try:
             # actual = str(type(BIAS_path))
-            actual = str(type(BIAS_path))
+            actual = BIAS_path
             expected = 'pathlib.WindowsPath'
-            self.assertEqual(actual,expected)
+            self.isinstance(actual,pathlib.WindowsPath)
         except:
             print("There's something wrong with path_checker. Not providing expected output.")
             
