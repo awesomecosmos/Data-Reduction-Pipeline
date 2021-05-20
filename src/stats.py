@@ -9,51 +9,56 @@ Created on Fri Apr  9 11:51:13 2021
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
 ###############################################################################
 
-# basic Python packages
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+# importing drp functions from /src/ folder
+import sys
+sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\DataReductionPipeline\\src")
+from drp_funcs import *
+
+# # basic Python packages
+# import numpy as np
+# import matplotlib
+# import matplotlib.pyplot as plt
+# import matplotlib.gridspec as gridspec
 
 
 
-# Astropy packages
-from astropy.io import fits
-# from astropy import stats
-from astropy.visualization import hist
+# # Astropy packages
+# from astropy.io import fits
+# # from astropy import stats
+# from astropy.visualization import hist
 
-# basic Python packages
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+# # basic Python packages
+# import numpy as np
+# import matplotlib
+# import matplotlib.pyplot as plt
+# import matplotlib.gridspec as gridspec
 
-# path-type packages
-import os
-import glob
-from pathlib import Path
+# # path-type packages
+# import os
+# import glob
+# from pathlib import Path
 
-# warnings
-import warnings
-warnings.filterwarnings('ignore')
+# # warnings
+# import warnings
+# warnings.filterwarnings('ignore')
 
-# Astropy packages
-from astropy.io import fits
-import astropy.units as u
-from astropy.stats import mad_std
-from astropy.nddata import CCDData
-from astropy.utils.data import get_pkg_data_filename
+# # Astropy packages
+# from astropy.io import fits
+# import astropy.units as u
+# from astropy.stats import mad_std
+# from astropy.nddata import CCDData
+# from astropy.utils.data import get_pkg_data_filename
 
-# ccdproc packages
-import ccdproc as ccdp
-from ccdproc import Combiner
-from ccdproc import ImageFileCollection
-from ccdproc.utils.sample_directory import sample_directory_with_files
+# # ccdproc packages
+# import ccdproc as ccdp
+# from ccdproc import Combiner
+# from ccdproc import ImageFileCollection
+# from ccdproc.utils.sample_directory import sample_directory_with_files
 
-import seaborn as sns
+# import seaborn as sns
 
-# user-defined packages
-from convenience_functions import show_image
+# # user-defined packages
+# from convenience_functions import show_image
 
 #----------------------------------------------
 
@@ -61,14 +66,14 @@ def img_stats(img_list):
     for img in img_list:
         image_data = fits.getdata(img)
         
-        # # extracting data from header for display purposes
-        # hdu1 = fits.open(img)
-        # file_name = hdu1[0].header['RUN'].strip(' ')
-        # exptime = hdu1[0].header['EXPTIME']
-        # obs_set = hdu1[0].header['SET'].strip(' ')
-        # chip_num = hdu1[0].header['CHIP']
+        # extracting data from header for display purposes
+        hdu1 = fits.open(img)
+        file_name = hdu1[0].header['RUN'].strip(' ')
+        exptime = hdu1[0].header['EXPTIME']
+        obs_set = hdu1[0].header['SET'].strip(' ')
+        chip_num = hdu1[0].header['CHIP']
         
-        # img_name = '{}-{}-{}-{}.fit'.format(file_name,exptime,obs_set,chip_num)
+        img_name = '{}-{}-{}-{}.fit'.format(file_name,exptime,obs_set,chip_num)
 
         # # getting statistical data
         # img_min = np.min(image_data)
@@ -82,8 +87,12 @@ def img_stats(img_list):
         # plotting figure
         plt.figure()
         sns.set_theme(style="whitegrid")
-        ax = sns.violinplot(x=image_data.flatten())
+        ax = sns.violinplot(x=image_data.flatten(),color="mediumorchid")
+        ax.set_title('Distribution of counts of {}'.format(img_name))
+        ax.set_xlabel('Counts')
+        plt.savefig("violin_{}.jpg".format(img_name),dpi=900)
         plt.show()
+        
         # plt.figure()
         # plt.hist(image_data.flatten(),bins=NBINS,label='counts')
         # plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)

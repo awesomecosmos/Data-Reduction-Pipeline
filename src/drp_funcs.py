@@ -30,6 +30,7 @@ from astropy.io import fits
 import astropy.units as u
 from astropy.stats import mad_std
 from astropy.nddata import CCDData
+from astropy.visualization import hist
 from astropy.utils.data import get_pkg_data_filename
 
 # ccdproc packages
@@ -37,6 +38,9 @@ import ccdproc as ccdp
 from ccdproc import Combiner
 from ccdproc import ImageFileCollection
 from ccdproc.utils.sample_directory import sample_directory_with_files
+
+# Seaborn packages 
+import seaborn as sns
 
 # user-defined packages
 from convenience_functions import show_image
@@ -219,7 +223,42 @@ def exptime_separator(IMAGElist):
 ###############################################################################
 #----------------SECTION THREE: DATA REDUCTION FUNCTIONS----------------------#
 ###############################################################################
-
+def img_stats(img_list):
+    """
+    This function provides image count statistics for FITS files in an image 
+    list. It uses a violin plot to display the distribution of the counts.
+    
+     Parameters
+    ----------
+    img_list : list
+        List of filenames of FITS files.
+    
+    Returns
+    -------
+    Violin plots, saved.
+    
+    """
+    for img in img_list:
+        image_data = fits.getdata(img)
+        
+        # extracting data from header for display purposes
+        hdu1 = fits.open(img)
+        file_name = hdu1[0].header['RUN'].strip(' ')
+        exptime = hdu1[0].header['EXPTIME']
+        obs_set = hdu1[0].header['SET'].strip(' ')
+        chip_num = hdu1[0].header['CHIP']
+        
+        img_name = '{}-{}-{}-{}.fit'.format(file_name,exptime,obs_set,chip_num)
+        
+        # plotting figure
+        plt.figure()
+        sns.set_theme(style="whitegrid")
+        ax = sns.violinplot(x=image_data.flatten(),color="mediumorchid")
+        ax.set_title('Distribution of counts of {}'.format(img_name))
+        ax.set_xlabel('Counts')
+        plt.savefig("violin_{}.jpg".format(img_name),dpi=900)
+        plt.show()
+        
 def mbias_maker(bias_chip_sep_files,MBIAS_path):
     """
     This function deals with making a master bias for each chip. It creates
