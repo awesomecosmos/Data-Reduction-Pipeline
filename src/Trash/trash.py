@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr  9 11:51:13 2021
+Created on Thu May 20 13:51:48 2021
 
 @author: ave41
 """
+# sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\ALERT")
+
 
 ###############################################################################
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------# 
@@ -117,7 +119,9 @@ img_stats(BIAS_files)
 
 
 
-
+# exptimes = []
+# for value in target_names_dict.values():
+#     exptimes.append(exptime_checker(value))
 
 
 

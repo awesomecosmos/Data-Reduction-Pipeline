@@ -34,6 +34,10 @@ MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
                                         include_path=True)
 MBIAS_chips_files = chip_separator(MBIAS_files)
 
+# uncomment the following line if you want image count statistics
+# code will take ~6 mins to run
+# img_stats(BIAS_files)
+
 #%%
 ##-----------------------------CALIBRATING DARKS-----------------------------##
 # reading in dark files from DARK folder
@@ -56,6 +60,10 @@ DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
 DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                               include_path=True)
 DARK_cal_chips_files = chip_separator(DARK_cal_files)
+
+# uncomment the following line if you want image count statistics
+# code will take ~6 mins to run
+# img_stats(DARK_files)
 
 #%%
 ##----------------------------MAKING MASTER DARKS----------------------------##
