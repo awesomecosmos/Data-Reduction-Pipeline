@@ -4,4 +4,4 @@
 - stats.py
 	- [x] clean up code
 	- [x] add to drp_funcs.py
-	- [ ] add to drp_code.py
+	- [x] add to drp_code.py
