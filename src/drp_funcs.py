@@ -49,46 +49,47 @@ from convenience_functions import show_image
 #-------------------SECTION TWO: HELPER FUNCTIONS-----------------------------# 
 ###############################################################################
 
-# def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
-#     """
-#     Find the nearest exposure time of a dark frame to the exposure time of the image,
-#     raising an error if the difference in exposure time is more than tolerance.
+def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
+    """
+    Find the nearest exposure time of a dark frame to the exposure time of the image,
+    raising an error if the difference in exposure time is more than tolerance.
     
-#     Source of this function: 
-#     https://mwcraig.github.io/ccd-as-book/05-03-Calibrating-the-flats.html
+    Source of this function: 
+    https://mwcraig.github.io/ccd-as-book/05-03-Calibrating-the-flats.html
     
-#     Parameters
-#     ----------
+    Parameters
+    ----------
     
-#     image : astropy.nddata.CCDData
-#         Image for which a matching dark is needed.
+    image : astropy.nddata.CCDData
+        Image for which a matching dark is needed.
     
-#     dark_exposure_times : list
-#         Exposure times for which there are darks.
+    dark_exposure_times : list
+        Exposure times for which there are darks.
     
-#     tolerance : float or ``None``, optional
-#         Maximum difference, in seconds, between the image and the closest dark. Set
-#         to ``None`` to skip the tolerance test.
+    tolerance : float or ``None``, optional
+        Maximum difference, in seconds, between the image and the closest dark. Set
+        to ``None`` to skip the tolerance test.
     
-#     Returns
-#     -------
+    Returns
+    -------
     
-#     float
-#         Closest dark exposure time to the image.
-#     """
+    float
+        Closest dark exposure time to the image.
+    """
 
-#     dark_exposures = np.array(list(dark_exposure_times))
-#     idx = np.argmin(np.abs(dark_exposures - image.header['EXPTIME']))
-#     closest_dark_exposure = dark_exposures[idx]
-
-#     if (tolerance is not None and 
-#         np.abs(image.header['EXPTIME'] - closest_dark_exposure) > tolerance):
-        
-#         raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
-#                            'time {}.'.format(closest_dark_exposure, a_flat.header['EXPTIME']))
-        
+    dark_exposures = np.array(list(dark_exposure_times))
+    idx = np.argmin(np.abs(dark_exposures - image.header['EXPTIME']))
+    closest_dark_exposure = dark_exposures[idx]
     
-#     return closest_dark_exposure
+    # a_flat = CCDData.read(image[0], unit='adu')
+
+    if (tolerance is not None and 
+        np.abs(image.header['EXPTIME'] - closest_dark_exposure) > tolerance):
+        
+        raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
+                           'time {}.'.format(closest_dark_exposure, image.header['EXPTIME']))
+    
+    return closest_dark_exposure
 
 #-----------------------------------------------------------------------------
 def chip_num_extractor(img):

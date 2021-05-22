@@ -95,103 +95,6 @@ FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
 MFLAT_path = path_checker(FLAT_path,'Master Flats')
 # FLAT_exptimes = exptime_checker(FLAT_files)
 FLAT_chips_files = chip_separator(FLAT_files)
-
-# this is supposed to be the def +++++++++++++++++++++++++++++++++++++++++++++
-
-# for f_index,FLAT_chips in enumerate(FLAT_chips_files):
-#         # getting master darks for current chip
-#         MDARK_chips_file = MDARK_chips_files[f_index]
-        
-#         for FLAT_file in FLAT_chips:
-#             hdu1 = fits.open(FLAT_file)
-#             # extracting header data for later saving purposes
-#             f_file_name = hdu1[0].header['RUN'].strip(' ')
-#             flat_exptime = hdu1[0].header['EXPTIME']
-#             f_obs_set = hdu1[0].header['SET'].strip(' ')
-#             f_chip_num = hdu1[0].header['CHIP']
-            
-#             # making CCDData object for flat which we are calibrating
-#             FLAT_ccd = CCDData.read(FLAT_file,unit=u.adu)
-            
-#             for mdark in MDARK_chips_file:
-#                 # finding master dark of matching exp
-#                 mdark_hdu1 = fits.open(mdark)
-#                 mdark_exptime = mdark_hdu1[0].header['EXPTIME']
-#                 if mdark_exptime == flat_exptime:
-#                     MDARK_exptime = mdark_exptime
-#                     MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
-#                 else:
-#                     pass
-#                 # need to put else condition here if the matching dark is not found
-                    
-#             # print(FLAT_ccd.unit)            #produces 'adu'
-#             # print(MDARK_to_subtract.unit)   #produces 'adu'
-            
-#             MDARK_exptime_u = MDARK_exptime*u.second #produces a Quantity object
-#             flat_exptime_u = flat_exptime*u.second   #produces a Quantity object
-            
-            
-#             # this is where I get the TypeError
-#             # supposedly both CCDData objects are 'Irreducible' types instead of 
-#             # a CCDData object as expected
-#             calibrated_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
-#                                                   master=MDARK_to_subtract, #CCD array of master dark
-#                                                   dark_exposure=MDARK_exptime_u,
-#                                                   data_exposure=flat_exptime_u,
-#                                                   # exposure_unit=u.second,
-#                                                 scale=False)
-#             # Save the result
-#             calibrated_flat.write(FLAT_cal_path / 
-#                   "calibrated_flat-{}-{}-{}-{}.fit".format(f_file_name,flat_exptime,
-#                                                             f_obs_set,f_chip_num),
-#                                                             overwrite=True) 
-#+++++++++++++++++++++++++++++++++++++++++++++
-# FLAT_ccds = FLAT_imgs.ccds(FIELD ='              flat',            
-#                             ccd_kwargs={'unit': 'adu'},                            
-#                             return_fname=True)
-def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
-    """
-    Find the nearest exposure time of a dark frame to the exposure time of the image,
-    raising an error if the difference in exposure time is more than tolerance.
-    
-    Source of this function: 
-    https://mwcraig.github.io/ccd-as-book/05-03-Calibrating-the-flats.html
-    
-    Parameters
-    ----------
-    
-    image : astropy.nddata.CCDData
-        Image for which a matching dark is needed.
-    
-    dark_exposure_times : list
-        Exposure times for which there are darks.
-    
-    tolerance : float or ``None``, optional
-        Maximum difference, in seconds, between the image and the closest dark. Set
-        to ``None`` to skip the tolerance test.
-    
-    Returns
-    -------
-    
-    float
-        Closest dark exposure time to the image.
-    """
-
-    dark_exposures = np.array(list(dark_exposure_times))
-    idx = np.argmin(np.abs(dark_exposures - image.header['EXPTIME']))
-    closest_dark_exposure = dark_exposures[idx]
-    
-    # a_flat = CCDData.read(image[0], unit='adu')
-
-    if (tolerance is not None and 
-        np.abs(image.header['EXPTIME'] - closest_dark_exposure) > tolerance):
-        
-        raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
-                           'time {}.'.format(closest_dark_exposure, image.header['EXPTIME']))
-        
-    
-    return closest_dark_exposure
-
 #%%
 to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
               '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
@@ -233,32 +136,86 @@ actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = '
 
 combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
 
-# for flat_ccd, file_name in FLAT_ccds: 
-for FLAT_chip in FLAT_chips_files:
-    for flat_file in FLAT_chip:
-    # extracting header data for display/saving purposes later
-        hdu1 = fits.open(flat_file)
-        file_name = hdu1[0].header['RUN'].strip(' ')
-        exptime = hdu1[0].header['EXPTIME']
-        obs_set = hdu1[0].header['SET'].strip(' ')
-        chip_num = hdu1[0].header['CHIP']
+# this is supposed to be the def +++++++++++++++++++++++++++++++++++++++++++++
+
+for f_index,FLAT_chips in enumerate(FLAT_chips_files):
+        # getting master darks for current chip
+        MDARK_chips_file = MDARK_chips_files[f_index]
         
-        ccd_img = CCDData.read(mdark,unit=u.adu)
+        for FLAT_file in FLAT_chips:
+            hdu1 = fits.open(FLAT_file)
+            # extracting header data for later saving purposes
+            f_file_name = hdu1[0].header['RUN'].strip(' ')
+            flat_exptime = hdu1[0].header['EXPTIME']
+            f_obs_set = hdu1[0].header['SET'].strip(' ')
+            f_chip_num = hdu1[0].header['CHIP']
+            
+            # making CCDData object for flat which we are calibrating
+            FLAT_ccd = CCDData.read(FLAT_file,unit=u.adu)
+            
+            for mdark in MDARK_chips_file:
+                # finding master dark of matching exp
+                mdark_hdu1 = fits.open(mdark)
+                mdark_ccd = CCDData.read(mdark,unit=u.adu)
+                mdark_exptime = mdark_hdu1[0].header['EXPTIME']
+                
+                # here, we are finding an exact match for the flat
+                if mdark_exptime == flat_exptime:
+                    MDARK_exptime = mdark_exptime
+                    MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                    
+                else: # need to put else condition here if the matching dark is not found
+                    # Find the correct dark exposure
+                    MDARK_exptime = find_nearest_dark_exposure(mdark_ccd, actual_exposure_times)
+                    MDARK_to_subtract = combined_darks[MDARK_exptime]
+                    # Subtract the dark current 
+                    # calibrated_flat = ccdp.subtract_dark(FLAT_ccd, 
+                    #                                  combined_darks[closest_dark],
+                    #                                  exposure_time='exptime', 
+                    #                                  exposure_unit=u.second)
+#-------------------
+            MDARK_exptime_u = MDARK_exptime*u.second #produces a Quantity object
+            flat_exptime_u = flat_exptime*u.second   #produces a Quantity object
+            
+            calibrated_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
+                                                  master=MDARK_to_subtract, #CCD array of master dark
+                                                  dark_exposure=MDARK_exptime_u,
+                                                  data_exposure=flat_exptime_u,
+                                                  # exposure_unit=u.second,
+                                                scale=False)
+            # Save the result
+            calibrated_flat.write(FLAT_cal_path / 
+                  "calibrated_flat-{}-{}-{}-{}.fit".format(f_file_name,flat_exptime,
+                                                            f_obs_set,f_chip_num),
+                                                            overwrite=True) 
+#+++++++++++++++++++++++++++++++++++++++++++++
+
+# THIS CODE WORKS! - DONT TOUCH (22/5/21, 2.43pm) 
+# for FLAT_chip in FLAT_chips_files:
+#     for flat_file in FLAT_chip:
+#     # extracting header data for display/saving purposes later
+#         hdu1 = fits.open(flat_file)
+#         file_name = hdu1[0].header['RUN'].strip(' ')
+#         exptime = hdu1[0].header['EXPTIME']
+#         obs_set = hdu1[0].header['SET'].strip(' ')
+#         chip_num = hdu1[0].header['CHIP']
         
-        # Find the correct dark exposure
-        closest_dark = find_nearest_dark_exposure(ccd_img, actual_exposure_times)
+#         ccd_img = CCDData.read(mdark,unit=u.adu)
+        
+#         # Find the correct dark exposure
+#         closest_dark = find_nearest_dark_exposure(ccd_img, actual_exposure_times)
     
-        # Subtract the dark current 
-        calibrated_flat = ccdp.subtract_dark(flat_ccd, 
-                                 combined_darks[closest_dark],
-                                 exposure_time='exptime', 
-                                 exposure_unit=u.second)
+#         # Subtract the dark current 
+#         calibrated_flat = ccdp.subtract_dark(flat_ccd, 
+#                                  combined_darks[closest_dark],
+#                                  exposure_time='exptime', 
+#                                  exposure_unit=u.second)
     
-        # Save the result; there are some duplicate file names so pre-pend "flat"
-        calibrated_flat.write(FLAT_cal_path / 
-                  "calibrated_flat-{}-{}-{}-{}.fit".format(file_name,exptime,
-                                                           obs_set,chip_num),
-                                                           overwrite=True)
+#         # Save the result; there are some duplicate file names so pre-pend "flat"
+#         calibrated_flat.write(FLAT_cal_path / 
+#                   "calibrated_flat-{}-{}-{}-{}.fit".format(file_name,exptime,
+#                                                            obs_set,chip_num),
+#                                                            overwrite=True)
 
 # flat_calibrator(FLAT_chips_files,MDARK_chips_files,FLAT_cal_path)
 #%%
