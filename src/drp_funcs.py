@@ -433,3 +433,129 @@ def mdark_maker(dark_chip_sep_files,MDARK_path):
             # show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
             # ax2.set_title('{}s Master Dark for Chip {}'.format(exptime,chip_num))
 
+#%%
+def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path):
+    """
+    This function deals with calibrating the flats for each chip. It calibrates
+    each flat (which has been chip-separated) for each exposure using the master
+    darks, and can also show image comparisons of a single flat vs a calibrated 
+    flat, if that block of code is uncommented.
+    
+    Parameters
+    ----------
+    flat_chip_sep_files : list
+        List of list of filenames of flats for each chip.
+        
+    MDARK_chip_sep_files : list
+        List of list of master darks for each chip.
+    
+    FLAT_cal_path : WindowsPath object
+        Path to directory where Calibrated Flats are to be saved.
+    
+    Returns
+    -------
+    Nothing.
+    """
+    
+    for f_index,FLAT_chips in enumerate(flat_chip_sep_files):
+        # getting master darks for current chip
+        MDARK_chips_file = MDARK_chip_sep_files[f_index]
+        
+        for FLAT_file in FLAT_chips:
+            hdu1 = fits.open(FLAT_file)
+            # extracting header data for later saving purposes
+            f_file_name = hdu1[0].header['RUN'].strip(' ')
+            flat_exptime = hdu1[0].header['EXPTIME']
+            f_obs_set = hdu1[0].header['SET'].strip(' ')
+            f_chip_num = hdu1[0].header['CHIP']
+            
+            # making CCDData object for flat which we are calibrating
+            FLAT_ccd = CCDData.read(FLAT_file,unit=u.adu)
+            
+            for mdark in MDARK_chips_file:
+                # finding master dark of matching exp
+                mdark_hdu1 = fits.open(mdark)
+                mdark_exptime = mdark_hdu1[0].header['EXPTIME']
+                if mdark_exptime == flat_exptime:
+                    MDARK_exptime = mdark_exptime
+                    MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                else:
+                    pass
+                # need to put else condition here if the matching dark is not found
+                    
+            # print(FLAT_ccd.unit)            #produces 'adu'
+            # print(MDARK_to_subtract.unit)   #produces 'adu'
+            
+            MDARK_exptime_u = MDARK_exptime*u.second #produces a Quantity object
+            flat_exptime_u = flat_exptime*u.second   #produces a Quantity object
+            
+            
+            # this is where I get the TypeError
+            # supposedly both CCDData objects are 'Irreducible' types instead of 
+            # a CCDData object as expected
+            calibrated_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
+                                                  master=MDARK_to_subtract, #CCD array of master dark
+                                                  dark_exposure=MDARK_exptime_u,
+                                                  data_exposure=flat_exptime_u,
+                                                  # exposure_unit=u.second,
+                                                scale=False)
+            # Save the result
+            calibrated_flat.write(FLAT_cal_path / 
+                  "calibrated_flat-{}-{}-{}-{}.fit".format(f_file_name,flat_exptime,
+                                                            f_obs_set,f_chip_num),
+                                                            overwrite=True) 
+
+def mflat_maker(cal_flat_chip_sep_files,MFLAT_path):
+    """
+    This function deals with making a master flat for each chip. It creates
+    FITS master flat files for each chip for each exposure time, and can also 
+    show image comparisons of a single flat vs a master flat, if that block of 
+    code is uncommented.
+    
+    Parameters
+    ----------
+    cal_flat_chip_sep_files : list
+        List of list of filenames of calibrated flats for each chip.
+    
+    MFLAT_path : WindowsPath object
+        Path to directory where Master Flats are to be saved.
+    
+    Returns
+    -------
+    Nothing.
+    """
+
+    for FLAT_chips in cal_flat_chip_sep_files:
+        # seperating list of files by their exposure lengths
+        exptime_seperated_files = exptime_separator(FLAT_chips)
+        
+        # for each array of files for each exposure length:
+        for exptime_seperated_exps in exptime_seperated_files:
+            # extracting header information for this set of files
+            hdu1 = fits.open(exptime_seperated_exps[0])
+            exptime = hdu1[0].header['EXPTIME']
+            chip_num = hdu1[0].header['CHIP']
+            
+            # getting CCD image for plotting purposes
+            flat_fits = fits.getdata(exptime_seperated_exps[0]) 
+            flat_ccd = CCDData(flat_fits,unit=u.adu) 
+    
+            # combining all the darks of this set together
+            master_flat = ccdp.combine(exptime_seperated_exps,unit=u.adu,
+                                  method='average',
+                                  sigma_clip=True, 
+                                  sigma_clip_low_thresh=5, 
+                                  sigma_clip_high_thresh=5,
+                                  sigma_clip_func=np.ma.median, 
+                                  sigma_clip_dev_func=mad_std,
+                                  mem_limit=350e6)
+            
+            # writing keywords to header
+            master_flat.meta['combined'] = True
+            master_flat.meta['EXPTIME'] = exptime
+            master_flat.meta['CHIP'] = chip_num
+            
+            # writing combined dark as a fits file
+            master_flat.write(MFLAT_path / 'mflat-{}-chip{}.fit'.format(exptime,
+                                                                      chip_num),
+                                                                  overwrite=True)
