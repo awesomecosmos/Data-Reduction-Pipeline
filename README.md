@@ -6,6 +6,11 @@ This GitHub repository contains all relevant files and outputs relating to this 
 
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 
+
+<img src="drp_qr_code.png" alt="drawing" width="200"/>
+
+<!-- ![QR Code to this repository](https://github.com/awesomecosmos/NEOExchange-Observations-Planner/blob/main/obs_planner_qr_code.png?raw=true =20x) -->
+
 ## Directory Structure
 ```
 Data-Reduction-Pipeline
