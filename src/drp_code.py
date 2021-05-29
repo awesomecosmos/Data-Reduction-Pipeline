@@ -9,6 +9,9 @@ import sys
 sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\DataReductionPipeline\\src")
 from drp_funcs import *
 
+to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
+              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+
 ###############################################################################
 #----------------------SECTION FOUR: DATA REDUCTION---------------------------# 
 ###############################################################################
@@ -16,10 +19,12 @@ from drp_funcs import *
 ##---------------------------MAKING MASTER BIASES----------------------------##
 # reading in bias files from BIAS folder
 BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
-BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
+
+BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+
+
 
 # selecting images
 BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True)
@@ -34,6 +39,8 @@ MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
                                         include_path=True)
 MBIAS_chips_files = chip_separator(MBIAS_files)
 
+#%%
+
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(BIAS_files)
@@ -42,10 +49,22 @@ MBIAS_chips_files = chip_separator(MBIAS_files)
 ##-----------------------------CALIBRATING DARKS-----------------------------##
 # reading in dark files from DARK folder
 DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
-DARK_imgs = ImageFileCollection(DARK_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+
+good_files = []
+for i in to_include:
+    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\FLAT" + i)
+    # good_file = glob.glob('Obs Data_old/FLATS' + i)
+    good_files += good_file
+
+FLAT_imgs = ImageFileCollection(filenames=good_files)
+FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
+                                  include_path=True)
+
+DARK_imgs = ImageFileCollection(DARK_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+
+
 
 # selecting images
 DARK_files = DARK_imgs.files_filtered(FIELD='              dark',include_path=True)
@@ -60,6 +79,9 @@ DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
 DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                               include_path=True)
 DARK_cal_chips_files = chip_separator(DARK_cal_files)
+
+#%%
+yeet = img_counts(DARK_files)
 
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
@@ -96,8 +118,7 @@ MFLAT_path = path_checker(FLAT_path,'Master Flats')
 # FLAT_exptimes = exptime_checker(FLAT_files)
 FLAT_chips_files = chip_separator(FLAT_files)
 #%%
-to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
-              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+
 good_files = []
 for i in to_include:
     good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\FLAT" + i)

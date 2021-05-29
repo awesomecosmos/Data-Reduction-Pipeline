@@ -72,25 +72,52 @@ exptimes = []
 for key,value in target_names_dict.items():
     exptimes.append([key,exptime_checker(value)])   
 
-###############################################################################
-#---------------------SECTION TWO: DATA REDUCTION-----------------------------# 
-###############################################################################
-#%%
-##---------------------------MAKING MASTER BIASES----------------------------##
+##--------------------------PREPARATION WORK---------------------------------##
+# this is a list of file extensions we wish to keep. 
+# It is assumed here we want Chips 1-10 only.
+to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
+              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+
+##-------------------------------PATHWORK------------------------------------##
 # reading in bias files from BIAS folder
 BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
                  "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v3/DARK")
+                 "ObsData_v4/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
+# reading in dark files from DARK folder
+DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
+                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
+                 "ObsData_v4/DARK")
+# making/checking Calibrated Darks path/folder
+DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+# making/checking MDARK path/folder
+MDARK_path = path_checker(DARK_path,'Master Darks')
 
+FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
+                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
+                 "ObsData_v4/FLAT")
+# making/checking Calibrated Flats path/folder
+FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
+# making/checking MFLAT path/folder
+MFLAT_path = path_checker(FLAT_path,'Master Flats')
+
+#%%
+###############################################################################
+#---------------------SECTION TWO: DATA REDUCTION-----------------------------# 
+###############################################################################
+
+#%%
+##---------------------------MAKING MASTER BIASES----------------------------##
 # selecting images
 BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
+BIAS_files = BIAS_imgs.files_filtered(EXPTIME=0,include_path=True) # EXPTIME is either 0 or 1
 BIAS_chips_files = chip_separator(BIAS_files)
 
+BIAS_counts = img_counts(BIAS_files)
+
 # calling mbias function to make master biases for each chip
-mbias_maker(BIAS_chips_files,MBIAS_path)
+mbias_files_for_log = mbias_maker2(BIAS_chips_files,MBIAS_path)
 
 # reading in master bias files from Master Biases folder
 MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
@@ -98,29 +125,45 @@ MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
                                         include_path=True)
 MBIAS_chips_files = chip_separator(MBIAS_files)
 
+MBIAS_counts = img_counts(MBIAS_files)
+
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(BIAS_files)
 #%%
 ##-----------------------------CALIBRATING DARKS-----------------------------##
-# reading in dark files from DARK folder
-DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v3/DARK")
-# making/checking Calibrated Darks path/folder
-DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
-# making/checking MDARK path/folder
-MDARK_path = path_checker(DARK_path,'Master Darks')
+# selecting images and excluding non-science images
+good_files = []
+for i in to_include:
+    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\DARK" 
+                          + i)
+    good_files += good_file
 
 # selecting images
-DARK_imgs = ImageFileCollection(DARK_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+DARK_imgs = ImageFileCollection(filenames=good_files)
 DARK_files = DARK_imgs.files_filtered(FIELD='              dark',include_path=True)
-DARK_chips_files = chip_separator(DARK_files)
+
+# now we need to get rid of the biases (0s and 1s exposures)
+# the >1 condition will take care of it - no darks strictly less than 1s 
+# will be calibrated. This is because sometimes the biases can be either 0s or 1s.
+good_DARK_files = []
+for DARK_file in DARK_files:
+    hdu1 = fits.open(DARK_file)
+    dark_exptime = hdu1[0].header['EXPTIME']
+    if dark_exptime >1:
+        good_DARK_files.append(DARK_file)
+
+DARK_chips_files = chip_separator(good_DARK_files)
+
+DARK_counts = img_counts(good_DARK_files)
 
 # calling dark_calibrator function to calibrate all the darks 
 dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
 
-#%%
+print('DARK_counts',DARK_counts)
+print(" ")
+
+
 ##----------------------------MAKING MASTER DARKS----------------------------##
 # reading in calibrated dark files from Calibrated Darks folder
 DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
@@ -128,10 +171,15 @@ DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<
                                               include_path=True)
 DARK_cal_chips_files = chip_separator(DARK_cal_files)
 
+DARK_cal_counts = img_counts(DARK_cal_files)
+
+print('DARK_cal_counts',DARK_cal_counts)
+print(" ")
+
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(DARK_files)
-
+#%%
 # calling mdark_maker function to make master darks
 mdark_maker(DARK_cal_chips_files,MDARK_path)
 
@@ -143,20 +191,12 @@ MDARK_ccds = MDARK_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                              combined=True)
 MDARK_chips_files = chip_separator(MDARK_files)
 
+MDARK_counts = img_counts(MDARK_files)
+
 #%%
 # ##--------------------------------FLATS-----------------------------------##
-FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v3/FLAT")
-# making/checking Calibrated Flats path/folder
-FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
-# making/checking MFLAT path/folder
-MFLAT_path = path_checker(FLAT_path,'Master Flats')
-
 # selecting images and excluding non-science images
 good_files = []
-to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
-              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
 for i in to_include:
     good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\FLAT" 
                           + i)
@@ -166,6 +206,8 @@ for i in to_include:
 FLAT_imgs = ImageFileCollection(filenames=good_files)
 FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
                                   include_path=True)
+
+FLAT_counts = img_counts(FLAT_files)
 
 # sorting files appropriately for future use
 FLAT_exptimes = exptime_checker(FLAT_files)
@@ -189,6 +231,8 @@ FLAT_cal_files = FLAT_cal_imgs.files_filtered(FIELD   = '              flat' ,
                                               include_path=True)
 FLAT_cal_chips_files = chip_separator(FLAT_cal_files)
 
+FLAT_cal_counts = img_counts(FLAT_cal_files)
+
 # calling mflat_maker function to make master darks
 mflat_maker(FLAT_cal_chips_files,MFLAT_path)
 
@@ -199,8 +243,28 @@ MFLAT_files = MFLAT_imgs.files_filtered(FIELD   = '              flat',
 MFLAT_ccds = MFLAT_imgs.ccds(FIELD   = '              flat', 
                              combined=True)
 MFLAT_chips_files = chip_separator(MFLAT_files)
+MFLAT_counts = img_counts(MFLAT_files)
 
 #%%
+# print(MBIAS_counts)
+
+print('BIAS_counts',BIAS_counts)
+print(" ")
+print('DARK_counts',DARK_counts)
+print(" ")
+print('DARK_cal_counts',DARK_cal_counts)
+print(" ")
+print('MDARK_counts',MDARK_counts)
+print(" ")
+print('FLAT_counts',FLAT_counts)
+print(" ")
+print('FLAT_cal_counts',FLAT_cal_counts)
+print(" ")
+print('MFLAT_counts',MFLAT_counts)
+
+#%%
+
+
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------# 
 ###############################################################################

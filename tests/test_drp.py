@@ -113,18 +113,18 @@ class Test(unittest.TestCase):
     #     except:
     #         print("There's something wrong with path_checker. Not providing expected output.")
     
-    def test_path_checker1(self):
-        """
-        Tests if the input Path is a PathObject.
-        """
-        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
-        try:
-            # actual = str(type(BIAS_path))
-            actual = BIAS_path
-            expected = 'pathlib.WindowsPath'
-            self.isinstance(actual,pathlib.WindowsPath)
-        except:
-            print("There's something wrong with path_checker. Not providing expected output.")
+    # def test_path_checker1(self):
+    #     """
+    #     Tests if the input Path is a PathObject.
+    #     """
+    #     BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+    #     try:
+    #         # actual = str(type(BIAS_path))
+    #         actual = BIAS_path
+    #         expected = 'pathlib.WindowsPath'
+    #         self.isinstance(actual,pathlib.WindowsPath)
+        # except:
+        #     print("There's something wrong with path_checker. Not providing expected output.")
             
     def test_path_checker2(self):
         """
@@ -174,14 +174,180 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The input IMAGElist[0] is not a str. It should be a str.")
+            
+    def test_exptime_checker3(self):
+        """
+        Tests if EXPTIME is an int.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist_component = DARK_cal_chips_files[0][0]
+        hdu1 = fits.open(IMAGElist_component)
+        exptime = hdu1[0].header['EXPTIME']
+        try:
+            actual = type(exptime)
+            expected = int
+            self.assertEqual(actual,expected)
+        except:
+            print("The EXPTIME in the header is not an int. It should be an int.")
     
+#------------------------------------------------------------------------------ 
+    
+    def test_exptime_separator1(self):
+        """
+        Tests if the input IMAGElist is a list.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist = DARK_cal_chips_files[0]
+        try:
+            actual = type(IMAGElist)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The input IMAGElist is not a list. It should be a list.")
+    
+    def test_exptime_separator2(self):
+        """
+        Tests if IMAGElist[i] is a string.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist_component = DARK_cal_chips_files[0][0]
+        try:
+            actual = type(IMAGElist_component)
+            expected = str
+            self.assertEqual(actual,expected)
+        except:
+            print("The input IMAGElist[0] is not a str. It should be a str.")
+    
+    def test_exptime_separator3(self):
+        """
+        Tests if EXPTIME is an int.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+        IMAGElist_component = DARK_cal_chips_files[0][0]
+        hdu1 = fits.open(IMAGElist_component)
+        exptime = hdu1[0].header['EXPTIME']
+        try:
+            actual = type(exptime)
+            expected = int
+            self.assertEqual(actual,expected)
+        except:
+            print("The EXPTIME in the header is not an int. It should be an int.")
+    
+ #------------------------------------------------------------------------------ 
+    
+    def test_img_stats1(self):
+        """
+        Tests if the input IMAGElist is a list.
+        """
+        DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/ObsData_v3/DARK")
+        DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+        DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+        DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                              include_path=True)
+        try:
+            actual = type(DARK_cal_files)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The input IMAGElist is not a list. It should be a list.")   
+
+#------------------------------------------------------------------------------ 
+
+    def test_mbias_maker1(self):
+        """
+        Tests if bias_chip_sep_files is a list.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
+                 "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
+                 "ObsData_v3/DARK")
+        MBIAS_path = path_checker(BIAS_path,'Master Biases')
+        BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+        BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
+        BIAS_chips_files = chip_separator(BIAS_files)
+        try:
+            actual = type(BIAS_chips_files)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The input bias_chip_sep_files is not a list. It should be a list.") 
+    
+    def test_mbias_maker2(self):
+        """
+        Tests if bias_chip_sep_files[0] is a list.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
+                 "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
+                 "ObsData_v3/DARK")
+        MBIAS_path = path_checker(BIAS_path,'Master Biases')
+        BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+        BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
+        BIAS_chips_files = chip_separator(BIAS_files)
+        try:
+            actual = type(BIAS_chips_files[0])
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The bias_chip_sep_files[0] is not a list. It should be a list.") 
+    
+    def test_mbias_maker3(self):
+        """
+        Tests if bias_chip_sep_files[0][0] is a str.
+        """
+        BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
+                 "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
+                 "ObsData_v3/DARK")
+        MBIAS_path = path_checker(BIAS_path,'Master Biases')
+        BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+        BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
+        BIAS_chips_files = chip_separator(BIAS_files)
+        try:
+            actual = type(BIAS_chips_files[0][0])
+            expected = str
+            self.assertEqual(actual,expected)
+        except:
+            print("The bias_chip_sep_files[0][0] is not a str. It should be a str.") 
+
+    
+#------------------------------------------------------------------------------ 
+
+    # def test_dark_calibrator1(self):
+    #     """
+    #     Tests if dark_chip_sep_files is a list.
+    #     """
 
 
+#================================ don't touch ================================#
 
-#=============================================================================#
+###############################################################################
+#-------------------------------END OF CODE-----------------------------------# 
+############################################################################### 
+
 if __name__ == '__main__':
     unittest.main()
-#=============================================================================#
+    
+###############################################################################
+#-------------------------------END OF CODE-----------------------------------# 
+############################################################################### 
 
     
 # tests to write:

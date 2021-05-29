@@ -310,6 +310,70 @@ def mbias_maker(bias_chip_sep_files,MBIAS_path):
         # ax1.set_title('Single calibrated bias for Chip {}'.format(chip_num))
         # show_image(master_bias.data, cmap='gray', ax=ax2, fig=fig, percl=90)
         # ax2.set_title('{} bias images combined for Chip {}'.format(num_of_biases,chip_num))
+        
+
+def mbias_maker2(bias_chip_sep_files,MBIAS_path):
+    """
+    This function deals with making a master bias for each chip. It creates
+    FITS master bias files for each chip, and can also show image comparisons
+    of a single bias vs a master bias, if that block of code is uncommented.
+    
+    Parameters
+    ----------
+    bias_chip_sep_files : list
+        List of list of filenames of biases for each chip.
+    
+    MBIAS_path : WindowsPath object
+        Path to directory where Master Biases are to be saved.
+    
+    Returns
+    -------
+    Nothing.
+    """
+    bias_list_to_return = []
+    for BIAS_chips in bias_chip_sep_files:
+        # seperating list of files by their exposure lengths
+        exptime_seperated_files = exptime_separator(BIAS_chips)
+        bias_list_to_return.append(exptime_seperated_files)
+        # for each array of files for each exposure length:
+        for exptime_seperated_exps in exptime_seperated_files:
+            # extracting header information for this set of files
+            hdu1 = fits.open(exptime_seperated_exps[0])
+            exptime = hdu1[0].header['EXPTIME']
+            chip_num = hdu1[0].header['CHIP']
+            
+
+            # combining all the biases together
+            master_bias = ccdp.combine(exptime_seperated_exps,unit=u.adu,
+                                       method='average',
+                                       sigma_clip=True, 
+                                       sigma_clip_low_thresh=5, 
+                                       sigma_clip_high_thresh=5,
+                                       sigma_clip_func=np.ma.median, 
+                                       sigma_clip_dev_func=mad_std,
+                                       mem_limit=350e6)
+            # setting combined bias header
+            master_bias.meta['combined'] = True
+            master_bias.meta['CHIP'] = chip_num
+            master_bias.meta['EXPTIME'] = exptime
+        
+            # writing combined bias as a fits file
+            master_bias.write(MBIAS_path / 'mbias-{}-chip{}.fit'.format(exptime,chip_num),
+                                                                          overwrite=True)
+        
+
+        # # getting CCD image for plotting purposes
+        # bias_fits = fits.getdata(exptime_seperated_exps[0]) 
+        # bias_ccd = CCDData(bias_fits,unit=u.adu) 
+
+        # # plotting single bias compared to combined bias
+        # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+        # show_image(BIAS_ccd[0], cmap='gray', ax=ax1, fig=fig, percl=90)
+        # ax1.set_title('Single calibrated bias for Chip {}'.format(chip_num))
+        # show_image(master_bias.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+        # ax2.set_title('{} bias images combined for Chip {}'.format(num_of_biases,chip_num))
+        
+    return bias_list_to_return #to add to calibration log
 
 
 def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files,DARK_cal_path):
@@ -336,9 +400,9 @@ def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files,DARK_cal_path):
     """
     for d_index,DARK_chips in enumerate(dark_chip_sep_files):
         # getting master biases for current chip
-        mbias_for_chip = MBIAS_chip_sep_files[d_index][0]
+        mbias_for_chip = MBIAS_chip_sep_files[d_index]#[0]
         # converting each DARKS file to a fits array
-        mbias_fits = fits.getdata(mbias_for_chip) 
+        mbias_fits = fits.getdata(mbias_for_chip[0]) 
         # converting each DARK array to a CCDData object
         mbias_ccd = CCDData(mbias_fits,unit=u.adu)
         
@@ -359,15 +423,15 @@ def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files,DARK_cal_path):
             DARK_ccd = CCDData(DARK_fits,unit=u.adu)
 
             # Subtract bias from each Dark
-            ccd = ccdp.subtract_bias(DARK_ccd,mbias_ccd)
+            cal_dark = ccdp.subtract_bias(DARK_ccd,mbias_ccd)
             # setting combined dark header
-            ccd.meta['calibrated'] = 'True'
-            ccd.meta['RUN'] = d_file_name
-            ccd.meta['EXPTIME'] = dark_exptime
-            ccd.meta['SET'] = d_obs_set
-            ccd.meta['CHIP'] = d_chip_num
+            cal_dark.meta['calibrated'] = 'True'
+            cal_dark.meta['RUN'] = d_file_name
+            cal_dark.meta['EXPTIME'] = dark_exptime
+            cal_dark.meta['SET'] = d_obs_set
+            cal_dark.meta['CHIP'] = d_chip_num
             # Save the result
-            ccd.write(DARK_cal_path 
+            cal_dark.write(DARK_cal_path 
                   / "calibrated_dark-{}".format(img_name),overwrite=True)
             
             
@@ -498,13 +562,13 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                 MDARK_exptime_u = MDARK_exptime*u.second #produces a Quantity object
                 flat_exptime_u = flat_exptime*u.second   #produces a Quantity object
                 
-                calibrated_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
+                cal_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
                                                      master=MDARK_to_subtract, #CCD array of master dark
                                                      dark_exposure=MDARK_exptime_u,
                                                      data_exposure=flat_exptime_u,
                                                      scale=False)
                 # Save the result
-                calibrated_flat.write(FLAT_cal_path / 
+                cal_flat.write(FLAT_cal_path / 
                       "calibrated_flat-{}-{}-{}-{}.fit".format(f_file_name,flat_exptime,
                                                                 f_obs_set,f_chip_num),
                                                                 overwrite=True) 
@@ -563,3 +627,47 @@ def mflat_maker(cal_flat_chip_sep_files,MFLAT_path):
             master_flat.write(MFLAT_path / 'mflat-{}-chip{}.fit'.format(exptime,
                                                                       chip_num),
                                                                   overwrite=True)
+            
+            
+            
+def img_counts(img_list,plots=False):
+    avg_counts = []
+    # avg_counts_dict=dict()
+    
+    for img in img_list:
+        image_data = fits.getdata(img)
+        
+        # extracting data from header for display purposes
+        hdu1 = fits.open(img)
+        # file_name = hdu1[0].header['RUN'].strip(' ')
+        # exptime = hdu1[0].header['EXPTIME']
+        # obs_set = hdu1[0].header['SET'].strip(' ')
+        chip_num = hdu1[0].header['CHIP']
+        img_name = 'chip{}.fit'.format(chip_num)
+
+        # getting statistical data
+        img_min = np.min(image_data)
+        img_max = np.max(image_data)
+        img_mean = np.mean(image_data)
+        # img_std = np.std(image_data)
+        
+        avg_counts.append('Chip'+str(chip_num)+':'+str(img_mean.round(2)))
+        
+        # setting number of bins 
+        NBINS = 100
+        
+        if plots==True:
+            plt.figure()
+            plt.hist(image_data.flatten(),bins=NBINS,label='counts')
+            plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
+            plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
+            plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
+            plt.legend()
+            plt.grid()
+            plt.xlabel('Count level in image')
+            plt.ylabel('Number of pixels with that count')
+            plt.title('Histogram of counts of {}'.format(img_name))
+            plt.savefig("hist_{}.jpg".format(img_name))
+            plt.show() 
+        
+    return avg_counts
