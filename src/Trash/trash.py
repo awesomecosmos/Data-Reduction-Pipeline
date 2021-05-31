@@ -499,7 +499,56 @@ from drp_funcs import *
 
 
 
+# def mbias_maker(bias_chip_sep_files,MBIAS_path):
+#     """
+#     This function deals with making a master bias for each chip. It creates
+#     FITS master bias files for each chip, and can also show image comparisons
+#     of a single bias vs a master bias, if that block of code is uncommented.
+    
+#     Parameters
+#     ----------
+#     bias_chip_sep_files : list
+#         List of list of filenames of biases for each chip.
+    
+#     MBIAS_path : WindowsPath object
+#         Path to directory where Master Biases are to be saved.
+    
+#     Returns
+#     -------
+#     Nothing.
+#     """
+#     for index,BIAS_chips in enumerate(bias_chip_sep_files):
+#         # getting some numbers for display/saving purposes later
+#         chip_num = chip_num_extractor(bias_chip_sep_files[index][0])
+#         num_of_biases = len(bias_chip_sep_files[0])
+    
+#         # converting each BIAS file to a fits array
+#         BIAS_fits = [fits.getdata(BIAS_file) for BIAS_file in BIAS_chips]
+#         # converting each BIAS array to a CCDData object
+#         BIAS_ccd = [CCDData(BIAS_fit,unit=u.adu) for BIAS_fit in BIAS_fits]
+    
+#         # combining all the biases together
+#         master_bias = ccdp.combine(BIAS_ccd,unit=u.adu,
+#                                    method='average',
+#                                    sigma_clip=True, 
+#                                    sigma_clip_low_thresh=5, 
+#                                    sigma_clip_high_thresh=5,
+#                                    sigma_clip_func=np.ma.median, 
+#                                    sigma_clip_dev_func=mad_std,
+#                                    mem_limit=350e6)
+#         # setting combined bias header
+#         master_bias.meta['combined'] = True
+#         master_bias.meta['CHIP'] = chip_num
+        
+#         # writing combined bias as a fits file
+#         master_bias.write(MBIAS_path / 'mbias_chip{}.fit'.format(chip_num),overwrite=True)
 
+#         # # plotting single bias compared to combined bias
+#         # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+#         # show_image(BIAS_ccd[0], cmap='gray', ax=ax1, fig=fig, percl=90)
+#         # ax1.set_title('Single calibrated bias for Chip {}'.format(chip_num))
+#         # show_image(master_bias.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+#         # ax2.set_title('{} bias images combined for Chip {}'.format(num_of_biases,chip_num))
 
 
 

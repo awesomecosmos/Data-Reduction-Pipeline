@@ -30,18 +30,22 @@ from drp_funcs import *
 ###############################################################################
 
 # changing to ALERT folder
-path = "C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\" \
+ALERT_path = "C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\" \
        "ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\ALERT"
-os.chdir(path) #from now on, we are in this directory
+os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
-fits_files = []
-for entry in os.listdir(path):
-    fits_files.append(entry)
+# selecting images and excluding non-science images
+good_ALERT_files = []
+ALERTs_to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
+              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+for i in ALERTs_to_include:
+    good_ALERT_file = glob.glob(ALERT_path + i)
+    good_ALERT_files += good_ALERT_file
 
-# getting target names for all files
+# # getting target names for all files
 targetnames = []
-for file in fits_files:
+for file in good_ALERT_files:
     hdul = fits.open(file)
     targetnames.append(hdul[0].header['FIELD'])
 
@@ -58,14 +62,14 @@ for target in targetnames:
 target_names_dict = dict()
 for a_target in non_duplicated_targetnames:
     lst_of_files = []
-    for file in fits_files:
+    for file in good_ALERT_files:
         this_file = fits.open(file)
         this_file_target = this_file[0].header['FIELD']
         if a_target == this_file_target:
             lst_of_files.append(file)
         else:
             pass
-    target_names_dict.update({a_target: lst_of_files})
+    target_names_dict.update({a_target:lst_of_files})
 
 # getting exposore times for each target
 exptimes = []
@@ -79,6 +83,7 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
               '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
 
 ##-------------------------------PATHWORK------------------------------------##
+reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
 BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
                  "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
@@ -96,7 +101,7 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 
 FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
                  "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/FLAT")
+                 "ObsData_v3/FLAT")
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
 # making/checking MFLAT path/folder
@@ -117,7 +122,7 @@ BIAS_chips_files = chip_separator(BIAS_files)
 BIAS_counts = img_counts(BIAS_files)
 
 # calling mbias function to make master biases for each chip
-mbias_files_for_log = mbias_maker2(BIAS_chips_files,MBIAS_path)
+mbias_files_for_log = mbias_maker(BIAS_chips_files,MBIAS_path)
 
 # reading in master bias files from Master Biases folder
 MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
@@ -135,7 +140,7 @@ MBIAS_counts = img_counts(MBIAS_files)
 # selecting images and excluding non-science images
 good_files = []
 for i in to_include:
-    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\DARK" 
+    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\DARK" 
                           + i)
     good_files += good_file
 
@@ -263,15 +268,122 @@ print(" ")
 print('MFLAT_counts',MFLAT_counts)
 
 #%%
-
-
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------# 
 ###############################################################################
 
+# target_names_dict
+# exptimes_lst
+
+# input items for func: ALERT_path,MDARK_chip_sep_files,MFLAT_chip_sep_files
+# input items values  : ALERT_path,MDARK_chips_files,MFLAT_chips_files
+
+MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
+MDARK_ccds = MDARK_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>', 
+                             combined=True)
+combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
+
+MFLAT_imgs = ImageFileCollection(MFLAT_path, keywords='*')
+MFLAT_ccds = MFLAT_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>', 
+                             combined=True)
+combined_flats = {ccd.header['EXPTIME']: ccd for ccd in MFLAT_ccds}
 
 
-
+for key, value in target_names_dict.items():
+    ALERT_chips_files = chip_separator(value)
+    
+    for a_index,ALERT_chips in enumerate(ALERT_chips_files):
+        # getting master darks  and flats for current chip
+        MDARK_chips_file = MDARK_chips_files[a_index]
+        MFLAT_chips_file = MFLAT_chips_files[a_index]
+        
+        ALERT_exptimes = exptime_checker(ALERT_chips)
+        
+        # finding closest dark exposure times to ALERT exposure times
+        # d_n_combined_dark = len(MDARK_chips_file)
+        # d_expected_exposure_times = set(ALERT_exptimes)
+        d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                     combined=True))
+        
+        # finding closest flat exposure times to ALERT exposure times
+        # f_n_combined_dark = len(MFLAT_chips_file)
+        # f_expected_exposure_times = set(ALERT_exptimes)
+        f_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                     combined=True))
+        
+        for ALERT_file in ALERT_chips:
+                al_hdu1 = fits.open(ALERT_file)
+                # extracting header data for later saving purposes
+                al_file_name = al_hdu1[0].header['RUN'].strip(' ')
+                ALERT_exptime = al_hdu1[0].header['EXPTIME']
+                al_obs_set = al_hdu1[0].header['SET'].strip(' ')
+                al_chip_num = al_hdu1[0].header['CHIP']
+                al_filter = al_hdu1[0].header['COLOUR'].strip(' ')
+                
+                
+                # making CCDData object for ALERT which we are calibrating
+                ALERT_ccd = CCDData.read(ALERT_file,unit=u.adu)
+                
+                for mdark in MDARK_chips_file:
+                    # finding master dark of matching exp
+                    mdark_hdu1 = fits.open(mdark)
+                    mdark_ccd = CCDData.read(mdark,unit=u.adu)
+                    mdark_exptime = mdark_hdu1[0].header['EXPTIME']
+                    
+                    # here, we are finding an exact match for the ALERT
+                    if mdark_exptime == ALERT_exptime:
+                        MDARK_exptime = mdark_exptime
+                        MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                        print("MDARK_exptime",MDARK_exptime)
+                        
+                    else:
+                        # Find the correct dark exposure
+                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
+                        MDARK_to_subtract = combined_darks[MDARK_exptime]
+                        print("MDARK_exptime",MDARK_exptime)
+                
+                for mflat in MFLAT_chips_file:
+                    # finding master dark of matching exp
+                    mflat_hdu1 = fits.open(mflat)
+                    mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                    mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                    
+                    MFLAT_exptime = mflat_exptime
+                    MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    print("MFLAT_exptime",MFLAT_exptime)
+                    
+                    # NEED TO CHOOSE A BETTER METHOD FOR CHOOSING THE BEST FLAT
+                    # EXP LENGTH!!!!!!!!! BELOW METHOD WILL NOT WORK!
+                    # WILL LIKELY NEED TO DO SOMETHING WITH COUNTS!
+                    
+                    # # here, we are finding an exact match for the ALERT
+                    # if mflat_exptime == alert_exptime:
+                    #     MFLAT_exptime = mflat_exptime
+                    #     MFLAT_to_divide = CCDData.read(mflat,unit=u.adu)
+                    #     print("MFLAT_exptime",MFLAT_exptime)
+                        
+                    # else:
+                    #     # Find the correct dark exposure
+                    #     MFLAT_exptime = find_nearest_dark_exposure(mflat_ccd,f_actual_exposure_times,tolerance=None)
+                    #     MFLAT_to_divide = combined_flats[MFLAT_exptime]
+                    #     print("MFLAT_exptime",MFLAT_exptime)
+        
+        reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                                         dark_frame=MDARK_to_subtract,
+                                         master_flat=MFLAT_to_divide,
+                                         data_exposure=ALERT_exptime*u.second,
+                                         dark_exposure=MDARK_exptime*u.second)
+        
+        # Save the result
+        reduced_ALERT.write(reduced_ALERT_path / 
+                      "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
+                                                             al_file_name,
+                                                             ALERT_exptime,
+                                                             al_filter,
+                                                             al_obs_set,
+                                                             al_chip_num),
+                                                             overwrite=True)
+        
 
 #%%
 #================================ don't touch ================================#
