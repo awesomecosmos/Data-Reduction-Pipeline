@@ -288,30 +288,44 @@ MFLAT_ccds = MFLAT_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                              combined=True)
 combined_flats = {ccd.header['EXPTIME']: ccd for ccd in MFLAT_ccds}
 
-
-for key, value in target_names_dict.items():
-    ALERT_chips_files = chip_separator(value)
+#%%
+def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,MFLAT_chip_sep_files,
+                  MDARK_imgs,MFLAT_imgs,combined_darks,combined_flats):
+    """
+    target_names_dict
     
-    for a_index,ALERT_chips in enumerate(ALERT_chips_files):
-        # getting master darks  and flats for current chip
-        MDARK_chips_file = MDARK_chips_files[a_index]
-        MFLAT_chips_file = MFLAT_chips_files[a_index]
+    reduced_ALERT_path
+    
+    MDARK_chip_sep_files: MDARK_chips_files
+    
+    MFLAT_chip_sep_files: MFLAT_chips_files
+    
+    MDARK_imgs
+    
+    MFLAT_imgs
+    
+    combined_darks
+    
+    combined_flats
+    """
+    for key, value in target_names_dict.items():
+        ALERT_chips_files = chip_separator(value)
         
-        ALERT_exptimes = exptime_checker(ALERT_chips)
-        
-        # finding closest dark exposure times to ALERT exposure times
-        # d_n_combined_dark = len(MDARK_chips_file)
-        # d_expected_exposure_times = set(ALERT_exptimes)
-        d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
-                                                                     combined=True))
-        
-        # finding closest flat exposure times to ALERT exposure times
-        # f_n_combined_dark = len(MFLAT_chips_file)
-        # f_expected_exposure_times = set(ALERT_exptimes)
-        f_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
-                                                                     combined=True))
-        
-        for ALERT_file in ALERT_chips:
+        for a_index,ALERT_chips in enumerate(ALERT_chips_files):
+            # getting master darks  and flats for current chip
+            MDARK_chips_file = MDARK_chip_sep_files[a_index]
+            MFLAT_chips_file = MFLAT_chip_sep_files[a_index]
+            
+            ALERT_exptimes = exptime_checker(ALERT_chips)
+            
+            # finding closest dark exposure times to ALERT exposure times
+            d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                         combined=True))
+            # finding closest flat exposure times to ALERT exposure times
+            f_actual_exposure_times = set(h['EXPTIME'] for h in MFLAT_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                         combined=True))
+            
+            for ALERT_file in ALERT_chips:
                 al_hdu1 = fits.open(ALERT_file)
                 # extracting header data for later saving purposes
                 al_file_name = al_hdu1[0].header['RUN'].strip(' ')
@@ -319,72 +333,69 @@ for key, value in target_names_dict.items():
                 al_obs_set = al_hdu1[0].header['SET'].strip(' ')
                 al_chip_num = al_hdu1[0].header['CHIP']
                 al_filter = al_hdu1[0].header['COLOUR'].strip(' ')
-                
-                
+                    
                 # making CCDData object for ALERT which we are calibrating
                 ALERT_ccd = CCDData.read(ALERT_file,unit=u.adu)
-                
+                    
                 for mdark in MDARK_chips_file:
                     # finding master dark of matching exp
                     mdark_hdu1 = fits.open(mdark)
                     mdark_ccd = CCDData.read(mdark,unit=u.adu)
                     mdark_exptime = mdark_hdu1[0].header['EXPTIME']
-                    
+                        
                     # here, we are finding an exact match for the ALERT
                     if mdark_exptime == ALERT_exptime:
                         MDARK_exptime = mdark_exptime
                         MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
                         print("MDARK_exptime",MDARK_exptime)
-                        
+                            
                     else:
                         # Find the correct dark exposure
                         MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
                         MDARK_to_subtract = combined_darks[MDARK_exptime]
                         print("MDARK_exptime",MDARK_exptime)
-                
+                    
                 for mflat in MFLAT_chips_file:
                     # finding master dark of matching exp
                     mflat_hdu1 = fits.open(mflat)
                     mflat_ccd = CCDData.read(mflat,unit=u.adu)
                     mflat_exptime = mflat_hdu1[0].header['EXPTIME']
-                    
+                        
                     MFLAT_exptime = mflat_exptime
                     MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
                     print("MFLAT_exptime",MFLAT_exptime)
-                    
+                        
                     # NEED TO CHOOSE A BETTER METHOD FOR CHOOSING THE BEST FLAT
                     # EXP LENGTH!!!!!!!!! BELOW METHOD WILL NOT WORK!
                     # WILL LIKELY NEED TO DO SOMETHING WITH COUNTS!
-                    
-                    # # here, we are finding an exact match for the ALERT
-                    # if mflat_exptime == alert_exptime:
-                    #     MFLAT_exptime = mflat_exptime
-                    #     MFLAT_to_divide = CCDData.read(mflat,unit=u.adu)
-                    #     print("MFLAT_exptime",MFLAT_exptime)
-                        
-                    # else:
-                    #     # Find the correct dark exposure
-                    #     MFLAT_exptime = find_nearest_dark_exposure(mflat_ccd,f_actual_exposure_times,tolerance=None)
-                    #     MFLAT_to_divide = combined_flats[MFLAT_exptime]
-                    #     print("MFLAT_exptime",MFLAT_exptime)
-        
-        reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
-                                         dark_frame=MDARK_to_subtract,
-                                         master_flat=MFLAT_to_divide,
-                                         data_exposure=ALERT_exptime*u.second,
-                                         dark_exposure=MDARK_exptime*u.second)
-        
-        # Save the result
-        reduced_ALERT.write(reduced_ALERT_path / 
-                      "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
-                                                             al_file_name,
-                                                             ALERT_exptime,
-                                                             al_filter,
-                                                             al_obs_set,
-                                                             al_chip_num),
-                                                             overwrite=True)
+            
+                reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                                             dark_frame=MDARK_to_subtract,
+                                             master_flat=MFLAT_to_divide,
+                                             data_exposure=ALERT_exptime*u.second,
+                                             dark_exposure=MDARK_exptime*u.second)
+                # writing keywords to header
+                reduced_ALERT.meta['reduced'] = True
+                reduced_ALERT.meta['EXPTIME'] = ALERT_exptime
+                reduced_ALERT.meta['CHIP'] = al_chip_num
+                reduced_ALERT.meta['RUN'] = al_file_name
+                reduced_ALERT.meta['SET'] = al_obs_set
+                reduced_ALERT.meta['COLOUR'] = al_filter
+                
+                # Save the result
+                reduced_ALERT.write(reduced_ALERT_path / 
+                              "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
+                                                                     al_file_name,
+                                                                     ALERT_exptime,
+                                                                     al_filter,
+                                                                     al_obs_set,
+                                                                     al_chip_num),
+                                                                     overwrite=True)
         
 
+#%%
+ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,MFLAT_chips_files,
+              MDARK_imgs,MFLAT_imgs,combined_darks,combined_flats)
 #%%
 #================================ don't touch ================================#
 
