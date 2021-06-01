@@ -543,34 +543,34 @@ def mflat_maker(cal_flat_chip_sep_files,MFLAT_path):
         
         # for each array of files for each exposure length:
         for exptime_seperated_exps in exptime_seperated_files:
-            # extracting header information for this set of files
-            hdu1 = fits.open(exptime_seperated_exps[0])
-            exptime = hdu1[0].header['EXPTIME']
-            chip_num = hdu1[0].header['CHIP']
-            
-            # getting CCD image for plotting purposes
-            flat_fits = fits.getdata(exptime_seperated_exps[0]) 
-            flat_ccd = CCDData(flat_fits,unit=u.adu) 
-    
-            # combining all the darks of this set together
-            master_flat = ccdp.combine(exptime_seperated_exps,unit=u.adu,
-                                  method='average',
-                                  sigma_clip=True, 
-                                  sigma_clip_low_thresh=5, 
-                                  sigma_clip_high_thresh=5,
-                                  sigma_clip_func=np.ma.median, 
-                                  sigma_clip_dev_func=mad_std,
-                                  mem_limit=350e6)
-            
-            # writing keywords to header
-            master_flat.meta['combined'] = True
-            master_flat.meta['EXPTIME'] = exptime
-            master_flat.meta['CHIP'] = chip_num
-            
-            # writing combined dark as a fits file
-            master_flat.write(MFLAT_path / 'mflat-{}-chip{}.fit'.format(exptime,
-                                                                      chip_num),
-                                                                  overwrite=True)
+                # extracting header information for this set of files
+                hdu1 = fits.open(exptime_seperated_exps[0])
+                exptime = hdu1[0].header['EXPTIME']
+                chip_num = hdu1[0].header['CHIP']
+                
+                # getting CCD image for plotting purposes
+                flat_fits = fits.getdata(exptime_seperated_exps[0]) 
+                flat_ccd = CCDData(flat_fits,unit=u.adu) 
+        
+                # combining all the flats of this set together
+                master_flat = ccdp.combine(exptime_seperated_exps,unit=u.adu,
+                                      method='average',
+                                      sigma_clip=True, 
+                                      sigma_clip_low_thresh=5, 
+                                      sigma_clip_high_thresh=5,
+                                      sigma_clip_func=np.ma.median, 
+                                      sigma_clip_dev_func=mad_std,
+                                      mem_limit=350e6)
+                
+                # writing keywords to header
+                master_flat.meta['combined'] = True
+                master_flat.meta['EXPTIME'] = exptime
+                master_flat.meta['CHIP'] = chip_num
+                
+                # writing combined dark as a fits file
+                master_flat.write(MFLAT_path / 
+                                  'mflat-{}-chip{}.fit'.format(exptime,chip_num),
+                                                                 overwrite=True)
             
             
             
