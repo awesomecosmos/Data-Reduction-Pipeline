@@ -500,7 +500,7 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                         
                     else:
                         # Find the correct dark exposure
-                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd, actual_exposure_times)
+                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,actual_exposure_times)
                         MDARK_to_subtract = combined_darks[MDARK_exptime]
     
                 MDARK_exptime_u = MDARK_exptime*u.second #produces a Quantity object

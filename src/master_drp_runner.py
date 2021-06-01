@@ -251,6 +251,98 @@ MFLAT_chips_files = chip_separator(MFLAT_files)
 MFLAT_counts = img_counts(MFLAT_files)
 
 #%%
+def flats_count_classifier(flats_lst):
+    hi_counts_flats = ['hi_counts',[]]
+    ok_counts_flats = ['ok_counts',[]]
+    lo_counts_flats = ['lo_counts',[]]
+    last_resort_flats = ['last_resort',[]]
+    trash_counts_flats = ['trash_counts',[]]
+    # to_inspect_flats = []
+    
+    for flat_img in flats_lst:
+        flat_data = fits.getdata(flat_img)
+        # getting counts for flat
+        img_mean = np.mean(flat_data)
+        
+        if img_mean <= 55000 and img_mean > 40000:
+            hi_counts_flats[1].append(flat_img)
+        elif img_mean <= 40000 and img_mean > 30000:
+            ok_counts_flats[1].append(flat_img)
+        elif img_mean <= 30000 and img_mean >= 20000:
+            lo_counts_flats[1].append(flat_img)
+        elif img_mean <= 63000 and img_mean > 55000:
+            last_resort_flats[1].append(flat_img)
+        elif img_mean < 20000 and img_mean >= 10000:
+            last_resort_flats[1].append(flat_img)
+        else: 
+            trash_counts_flats[1].append(flat_img)
+    
+    return hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats
+#%%
+hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats=flats_count_classifier(MFLAT_files)
+
+counts_sep_flats = [hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats]
+#%%
+def mflat_maker_for_counts(counts_sep_flats,MFLAT_path):
+    """
+    This function deals witH [ADD STUFF HERE ADND FIX THIS ENTIRE DOCTSTING]
+    
+    Parameters
+    ----------
+    cal_flat_chip_sep_files : list
+        List of list of filenames of calibrated flats for each chip.
+    
+    MFLAT_path : WindowsPath object
+        Path to directory where Master Flats are to be saved.
+    
+    Returns
+    -------
+    Nothing.
+    """
+    # for each category of counts
+    for counts_sep_flats_categories in counts_sep_flats:
+        this_category = counts_sep_flats_categories[0]
+        counts_sep_flats_category = counts_sep_flats_categories[1]
+        
+        if len(counts_sep_flats_category) == 0:
+            pass
+        else:
+            # seperating list of flats in this category by chip num
+            chip_seperated_files = chip_separator(counts_sep_flats_category)
+            # for each array of files for each chip length:
+            for chip_files in chip_seperated_files:
+                exptimes = []
+                for chip_file in chip_files:
+                    # extracting header information for this set of files
+                    hdu1 = fits.open(chip_file)
+                    exptime = hdu1[0].header['EXPTIME']
+                    exptimes.append(exptime)
+                    a_hdu1 = fits.open(chip_file)
+                    chip_num = a_hdu1[0].header['CHIP']
+            
+                # combining all the flats of this set together
+                master_flat = ccdp.combine(chip_files,unit=u.adu,
+                                          method='average',
+                                          sigma_clip=True, 
+                                          sigma_clip_low_thresh=5, 
+                                          sigma_clip_high_thresh=5,
+                                          sigma_clip_func=np.ma.median, 
+                                          sigma_clip_dev_func=mad_std,
+                                          mem_limit=350e6)
+                    
+                # writing keywords to header
+                master_flat.meta['combined'] = True
+                # master_flat.meta['all_exps'] = exptimes
+                master_flat.meta['CHIP'] = chip_num
+                    
+                # writing combined dark as a fits file
+                master_flat.write(MFLAT_path / 
+                                      'mflat-{}-chip{}.fit'.format(this_category,chip_num),
+                                                                     overwrite=True)
+
+#%%
+mflat_maker_for_counts(counts_sep_flats,MFLAT_path)
+#%%
 # print(MBIAS_counts)
 
 print('BIAS_counts',BIAS_counts)
