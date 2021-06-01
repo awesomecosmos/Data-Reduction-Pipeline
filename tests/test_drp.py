@@ -87,17 +87,35 @@ MFLAT_files = MFLAT_imgs.files_filtered(FIELD   = '              flat',
                                         include_path=True)
 
 
-
-
-
-
 test_fits_file = "C://Users//ave41//OneDrive - University of Canterbury//Master's 2021//ASTR480 Research//ASTR480 Code//Data Reduction Pipeline//DataReductionPipeline//tests//D21350-60-a-5.fit"
+BIAS_chips_files = chip_separator(BIAS_files)
+DARK_cal_chips_files = chip_separator(DARK_cal_files)
+
 ###############################################################################
 #-------------------------SECTION TWO: UNIT TESTS-----------------------------# 
 ###############################################################################
     
 class Test(unittest.TestCase):  
+ #------------------------------------------------------------------------------ 
+    def test_keyword_checker(self):
+        """
+        Tests if image headers contains certain keywords.
+        This works in levels, with an image from each level being checked.
+        Unprocessed data > Calibrated data > Master data > Reduced ALERTs
+        """
+        expected_keywords = ['EXPTIME','CHIP','RUN','SET']
+        lst_of_levels_to_check = [BIAS_files[0],MBIAS_files[0],DARK_files[0],DARK_cal_files[0],
+                                  MDARK_files[0],FLAT_files[0],FLAT_cal_files[0],MFLAT_files[0]]
+        for level in lst_of_levels_to_check:
+            for keyword in expected_keywords:
+                try:
+                    hdu1 = fits.open(level) 
+                    hdr = hdu1[0].header
+                    assert keyword in hdr
+                except:
+                    print("The keyword {} is not contained within the header of {}. Please inspect the header.".format(keyword,level))
 #------------------------------------------------------------------------------
+    
     def test_chipNumExtractor1(self):
         """
         Tests if the original function provides the expected output on a 
@@ -163,8 +181,7 @@ class Test(unittest.TestCase):
         Tests if the input is a list.
         """
         try:
-            func = chip_separator(BIAS_files)
-            actual = type(func)
+            actual = type(BIAS_chips_files)
             expected = list
             self.assertEqual(actual,expected)
         except:
@@ -175,8 +192,7 @@ class Test(unittest.TestCase):
         Tests if the content in the input list is a string.
         """
         try:
-            test_lst = BIAS_files
-            func = chip_separator(test_lst)
+            func = chip_separator(BIAS_files)
             actual = type(func[0][0])
             expected = str
             self.assertEqual(actual,expected)
@@ -184,8 +200,6 @@ class Test(unittest.TestCase):
             print("The information inside the input list is not of type 'string'.")
 #------------------------------------------------------------------------------  
 
-
-            
     def test_path_checker2(self):
         """
         Tests if the input folder_name is a string.
@@ -197,13 +211,12 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The input folder_name is not a string. It should be a string.")
-            
 #------------------------------------------------------------------------------  
+    
     def test_exptime_checker1(self):
         """
         Tests if IMAGElist is a list.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
         IMAGElist = DARK_cal_chips_files[0]
         try:
             actual = type(IMAGElist)
@@ -216,7 +229,6 @@ class Test(unittest.TestCase):
         """
         Tests if IMAGElist[i] is a string.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
         IMAGElist_component = DARK_cal_chips_files[0][0]
         try:
             actual = type(IMAGElist_component)
@@ -229,7 +241,6 @@ class Test(unittest.TestCase):
         """
         Tests if EXPTIME is an int.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
         IMAGElist_component = DARK_cal_chips_files[0][0]
         hdu1 = fits.open(IMAGElist_component)
         exptime = hdu1[0].header['EXPTIME']
@@ -239,15 +250,12 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The EXPTIME in the header is not an int. It should be an int.")
-
-    
 #------------------------------------------------------------------------------ 
     
     def test_exptime_separator1(self):
         """
         Tests if the input IMAGElist is a list.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
         IMAGElist = DARK_cal_chips_files[0]
         try:
             actual = type(IMAGElist)
@@ -260,7 +268,6 @@ class Test(unittest.TestCase):
         """
         Tests if IMAGElist[i] is a string.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
         IMAGElist_component = DARK_cal_chips_files[0][0]
         try:
             actual = type(IMAGElist_component)
@@ -273,7 +280,7 @@ class Test(unittest.TestCase):
         """
         Tests if EXPTIME is an int.
         """
-        DARK_cal_chips_files = chip_separator(DARK_cal_files)
+
         IMAGElist_component = DARK_cal_chips_files[0][0]
         hdu1 = fits.open(IMAGElist_component)
         exptime = hdu1[0].header['EXPTIME']
@@ -283,7 +290,6 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The EXPTIME in the header is not an int. It should be an int.")
-    
  #------------------------------------------------------------------------------ 
     
     def test_img_stats1(self):
@@ -296,14 +302,12 @@ class Test(unittest.TestCase):
             self.assertEqual(actual,expected)
         except:
             print("The input IMAGElist is not a list. It should be a list.")   
-
 #------------------------------------------------------------------------------ 
 
     def test_mbias_maker1(self):
         """
         Tests if bias_chip_sep_files is a list.
         """
-        BIAS_chips_files = chip_separator(BIAS_files)
         try:
             actual = type(BIAS_chips_files)
             expected = list
@@ -315,7 +319,6 @@ class Test(unittest.TestCase):
         """
         Tests if bias_chip_sep_files[0] is a list.
         """
-        BIAS_chips_files = chip_separator(BIAS_files)
         try:
             actual = type(BIAS_chips_files[0])
             expected = list
@@ -327,32 +330,13 @@ class Test(unittest.TestCase):
         """
         Tests if bias_chip_sep_files[0][0] is a str.
         """
-        BIAS_chips_files = chip_separator(BIAS_files)
+
         try:
             actual = type(BIAS_chips_files[0][0])
             expected = str
             self.assertEqual(actual,expected)
         except:
             print("The bias_chip_sep_files[0][0] is not a str. It should be a str.") 
-
-#------------------------------------------------------------------------------ 
-    def test_keyword_checker(self):
-        """
-        Tests if image headers contains certain keywords.
-        This works in levels, with an image from each level being checked.
-        Unprocessed data > Calibrated data > Master data > Reduced ALERTs
-        """
-        expected_keywords = ['EXPTIME','CHIP','RUN','SET']
-        lst_of_levels_to_check = [BIAS_files[0],MBIAS_files[0],DARK_files[0],DARK_cal_files[0],
-                                  MDARK_files[0],FLAT_files[0],FLAT_cal_files[0],MFLAT_files[0]]
-        for level in lst_of_levels_to_check:
-            for keyword in expected_keywords:
-                try:
-                    hdu1 = fits.open(level) 
-                    hdr = hdu1[0].header
-                    assert keyword in hdr
-                except:
-                    print("The keyword {} is not contained within the header of {}. Please inspect the header.".format(keyword,level))
 
 #------------------------------------------------------------------------------ 
 
