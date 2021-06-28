@@ -1,7 +1,0 @@
-/Obs Data/
-/Obs Data_old/
-/test/*.fit
-/Histogram Plots/
-/src/stats.py
-/src/trash.py
-/src/Trash/

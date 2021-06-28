@@ -30,8 +30,7 @@ from drp_funcs import *
 ###############################################################################
 
 # changing to ALERT folder
-ALERT_path = "C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\" \
-       "ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -85,23 +84,17 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
 ##-------------------------------PATHWORK------------------------------------##
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
-BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
-                 "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 # reading in dark files from DARK folder
-DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/DARK")
+DARK_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
 # making/checking MDARK path/folder
 MDARK_path = path_checker(DARK_path,'Master Darks')
 
-FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/FLAT")
+FLAT_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT")
 
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
@@ -119,7 +112,8 @@ MFLAT_counts_path = path_checker(MFLAT_path,'Master Flats by Counts')
 ##---------------------------MAKING MASTER BIASES----------------------------##
 # selecting images
 BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-BIAS_files = BIAS_imgs.files_filtered(EXPTIME=0,include_path=True) # EXPTIME is either 0 or 1
+# make this into a try/else block?
+BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
 BIAS_chips_files = chip_separator(BIAS_files)
 
 BIAS_counts = img_counts(BIAS_files)
@@ -143,7 +137,7 @@ MBIAS_counts = img_counts(MBIAS_files)
 # selecting images and excluding non-science images
 good_files = []
 for i in to_include:
-    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\DARK" 
+    good_file = glob.glob("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK" 
                           + i)
     good_files += good_file
 
@@ -195,19 +189,16 @@ mdark_maker(DARK_cal_chips_files,MDARK_path)
 MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
 MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                         include_path=True)
-# MDARK_ccds = MDARK_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>', 
-#                              combined=True)
 #%%
 MDARK_ccds = MDARK_imgs.ccds(COMBINED=True)
 MDARK_chips_files = chip_separator(MDARK_files)
+# MDARK_counts = img_counts(MDARK_files)
 
-MDARK_counts = img_counts(MDARK_files)
-
-# ##--------------------------------FLATS-----------------------------------##
+##----------------------------------FLATS------------------------------------##
 # selecting images and excluding non-science images
 good_files = []
 for i in to_include:
-    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\FLAT" 
+    good_file = glob.glob("//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT" 
                           + i)
     good_files += good_file
 
@@ -226,9 +217,6 @@ FLAT_chips_files = chip_separator(FLAT_files)
 n_combined_dark = len(MDARK_files)
 expected_exposure_times = set(FLAT_exptimes) 
 actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(combined=True))
-# .headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
-#                                                                     combined=True)
-# SUBBIAS = 'ccd=<CCDData>, master=<CCDData>'
 combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
 #%%
 # calling flat_calibrator function to calibrate all the darks 
@@ -255,99 +243,10 @@ MFLAT_ccds = MFLAT_imgs.ccds(FIELD   = '              flat',
                              combined=True)
 MFLAT_chips_files = chip_separator(MFLAT_files)
 MFLAT_counts = img_counts(MFLAT_files)
-
 #%%
-def flats_count_classifier(flats_lst):
-    hi_counts_flats = ['hi_counts',[]]
-    ok_counts_flats = ['ok_counts',[]]
-    lo_counts_flats = ['lo_counts',[]]
-    last_resort_flats = ['last_resort',[]]
-    trash_counts_flats = ['trash_counts',[]]
-    # to_inspect_flats = []
-    
-    for flat_img in flats_lst:
-        flat_data = fits.getdata(flat_img)
-        # getting counts for flat
-        img_mean = np.mean(flat_data)
-        
-        if img_mean <= 55000 and img_mean > 40000:
-            hi_counts_flats[1].append(flat_img)
-        elif img_mean <= 40000 and img_mean > 30000:
-            ok_counts_flats[1].append(flat_img)
-        elif img_mean <= 30000 and img_mean >= 20000:
-            lo_counts_flats[1].append(flat_img)
-        elif img_mean <= 63000 and img_mean > 55000:
-            last_resort_flats[1].append(flat_img)
-        elif img_mean < 20000 and img_mean >= 10000:
-            last_resort_flats[1].append(flat_img)
-        else: 
-            trash_counts_flats[1].append(flat_img)
-    
-    return hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats
-#%%
+# categorising master flats by number of counts
 hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats=flats_count_classifier(MFLAT_files)
-
 counts_sep_flats = [hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats]
-#%%
-def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
-    """
-    This function deals witH [ADD STUFF HERE ADND FIX THIS ENTIRE DOCTSTING]
-    
-    Parameters
-    ----------
-    cal_flat_chip_sep_files : list
-        List of list of filenames of calibrated flats for each chip.
-    
-    MFLAT_path : WindowsPath object
-        Path to directory where Master Flats are to be saved.
-    
-    Returns
-    -------
-    Nothing.
-    """
-    # for each category of counts
-    for counts_sep_flats_categories in counts_sep_flats:
-        this_category = counts_sep_flats_categories[0]
-        counts_sep_flats_category = counts_sep_flats_categories[1]
-        
-        if len(counts_sep_flats_category) == 0:
-            pass
-        else:
-            # seperating list of flats in this category by chip num
-            chip_seperated_files = chip_separator(counts_sep_flats_category)
-            # for each array of files for each chip length:
-            for chip_files in chip_seperated_files:
-                if len(chip_files) == 0:
-                    pass
-                else:
-                    exptimes = []
-                    for chip_file in chip_files:
-                        # extracting header information for this set of files
-                        hdu1 = fits.open(chip_file)
-                        exptime = hdu1[0].header['EXPTIME']
-                        exptimes.append(exptime)
-                        a_hdu1 = fits.open(chip_file)
-                        chip_num = a_hdu1[0].header['CHIP']
-                
-                    # combining all the flats of this set together
-                    master_flat = ccdp.combine(chip_files,unit=u.adu,
-                                              method='average',
-                                              sigma_clip=True, 
-                                              sigma_clip_low_thresh=5, 
-                                              sigma_clip_high_thresh=5,
-                                              sigma_clip_func=np.ma.median, 
-                                              sigma_clip_dev_func=mad_std,
-                                              mem_limit=350e6)
-                        
-                    # writing keywords to header
-                    master_flat.meta['combined'] = True
-                    # master_flat.meta['all_exps'] = exptimes
-                    master_flat.meta['CHIP'] = chip_num
-                        
-                    # writing combined dark as a fits file
-                    master_flat.write(MFLAT_counts_path / 
-                                          'mflat-{}-chip{}.fit'.format(this_category,chip_num),
-                                                                         overwrite=True)
 
 #%%
 mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path)
@@ -360,152 +259,16 @@ MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat',
                              combined=True)
 MFLAT_counts_chips_files = chip_separator(MFLAT_counts_files)
 
-#%%
-# print(MBIAS_counts)
-# MFLAT_counts_counts = img_counts(MFLAT_counts_files,plots=True)
-print('BIAS_counts',BIAS_counts)
-print(" ")
-print('DARK_counts',DARK_counts)
-print(" ")
-print('DARK_cal_counts',DARK_cal_counts)
-print(" ")
-print('MDARK_counts',MDARK_counts)
-print(" ")
-# print('FLAT_counts',FLAT_counts)
-# print(" ")
-# print('FLAT_cal_counts',FLAT_cal_counts)
-# print(" ")
-# print('MFLAT_counts',MFLAT_counts)
-# print(" ")
-# print('MFLAT_counts_files',MFLAT_counts_counts)
 
+#================================ don't touch ================================#
 #%%
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------# 
 ###############################################################################
 
-# target_names_dict
-# exptimes_lst
-
-# input items for func: ALERT_path,MDARK_chip_sep_files,MFLAT_chip_sep_files
-# input items values  : ALERT_path,MDARK_chips_files,MFLAT_chips_files
-
-MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
-MDARK_ccds = MDARK_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>', 
-                             combined=True)
-combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
-
-MFLAT_imgs = ImageFileCollection(MFLAT_path, keywords='*')
-MFLAT_ccds = MFLAT_imgs.ccds(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>', 
-                             combined=True)
-combined_flats = {ccd.header['EXPTIME']: ccd for ccd in MFLAT_ccds}
-
-#%%
-def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,MFLAT_chip_sep_files,
-                  MDARK_imgs,MFLAT_imgs,combined_darks,combined_flats):
-    """
-    target_names_dict
-    
-    reduced_ALERT_path
-    
-    MDARK_chip_sep_files: MDARK_chips_files
-    
-    MFLAT_chip_sep_files: MFLAT_chips_files
-    
-    MDARK_imgs
-    
-    MFLAT_imgs
-    
-    combined_darks
-    
-    combined_flats
-    """
-    for key, value in target_names_dict.items():
-        ALERT_chips_files = chip_separator(value)
-        
-        for a_index,ALERT_chips in enumerate(ALERT_chips_files):
-            # getting master darks  and flats for current chip
-            MDARK_chips_file = MDARK_chip_sep_files[a_index]
-            MFLAT_chips_file = MFLAT_chip_sep_files[a_index]
-            
-            ALERT_exptimes = exptime_checker(ALERT_chips)
-            
-            # finding closest dark exposure times to ALERT exposure times
-            d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
-                                                                         combined=True)) 
-            for ALERT_file in ALERT_chips:
-                al_hdu1 = fits.open(ALERT_file)
-                # extracting header data for later saving purposes
-                al_file_name = al_hdu1[0].header['RUN'].strip(' ')
-                ALERT_exptime = al_hdu1[0].header['EXPTIME']
-                al_obs_set = al_hdu1[0].header['SET'].strip(' ')
-                al_chip_num = al_hdu1[0].header['CHIP']
-                al_filter = al_hdu1[0].header['COLOUR'].strip(' ')
-                    
-                # making CCDData object for ALERT which we are calibrating
-                ALERT_ccd = CCDData.read(ALERT_file,unit=u.adu)
-                    
-                for mdark in MDARK_chips_file:
-                    # finding master dark of matching exp
-                    mdark_hdu1 = fits.open(mdark)
-                    mdark_ccd = CCDData.read(mdark,unit=u.adu)
-                    mdark_exptime = mdark_hdu1[0].header['EXPTIME']
-                        
-                    # here, we are finding an exact match for the ALERT
-                    if mdark_exptime == ALERT_exptime:
-                        MDARK_exptime = mdark_exptime
-                        MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
-                        print("MDARK_exptime",MDARK_exptime)
-                            
-                    else:
-                        # Find the correct dark exposure
-                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
-                        MDARK_to_subtract = combined_darks[MDARK_exptime]
-                        print("MDARK_exptime",MDARK_exptime)
-                    
-                for mflat in MFLAT_chips_file:
-                    # finding master dark of matching exp
-                    mflat_hdu1 = fits.open(mflat)
-                    mflat_ccd = CCDData.read(mflat,unit=u.adu)
-                    mflat_exptime = mflat_hdu1[0].header['EXPTIME']
-                        
-                    MFLAT_exptime = mflat_exptime
-                    MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                    print("MFLAT_exptime",MFLAT_exptime)
-                        
-                    # NEED TO CHOOSE A BETTER METHOD FOR CHOOSING THE BEST FLAT
-                    # EXP LENGTH!!!!!!!!! BELOW METHOD WILL NOT WORK!
-                    # WILL LIKELY NEED TO DO SOMETHING WITH COUNTS!
-            
-                reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
-                                             dark_frame=MDARK_to_subtract,
-                                             master_flat=MFLAT_to_divide,
-                                             data_exposure=ALERT_exptime*u.second,
-                                             dark_exposure=MDARK_exptime*u.second)
-                # writing keywords to header
-                reduced_ALERT.meta['reduced'] = True
-                reduced_ALERT.meta['EXPTIME'] = ALERT_exptime
-                reduced_ALERT.meta['CHIP'] = al_chip_num
-                reduced_ALERT.meta['RUN'] = al_file_name
-                reduced_ALERT.meta['SET'] = al_obs_set
-                reduced_ALERT.meta['COLOUR'] = al_filter
-                
-                # Save the result
-                reduced_ALERT.write(reduced_ALERT_path / 
-                              "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
-                                                                     al_file_name,
-                                                                     ALERT_exptime,
-                                                                     al_filter,
-                                                                     al_obs_set,
-                                                                     al_chip_num),
-                                                                     overwrite=True)
-        
-
-#%%
-ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,MFLAT_chips_files,
-              MDARK_imgs,MFLAT_imgs,combined_darks,combined_flats)
-#%%
-#================================ don't touch ================================#
+# reducing ALERT data
+ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,
+              MFLAT_counts_chips_files,MDARK_imgs,combined_darks)
 
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------# 
