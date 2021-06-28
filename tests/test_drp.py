@@ -19,24 +19,19 @@ import unittest
 to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
               '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
 # reading in bias files from BIAS folder
-BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/"
-                 "Master's 2021/ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/DARK")
 BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-BIAS_files = BIAS_imgs.files_filtered(EXPTIME=0,include_path=True) # EXPTIME is either 0 or 1
+BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
 MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
                                         include_path=True)
 # reading in dark files from DARK folder
-DARK_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v4/DARK")
+DARK_path = Path("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/DARK")
 good_files = []
 for i in to_include:
-    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v4\\DARK" 
-                          + i)
+    good_file = glob.glob("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/DARK"+i)
     good_files += good_file
 
 # selecting images
@@ -62,13 +57,10 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
 MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                         include_path=True)
-FLAT_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/"
-                 "ASTR480 Research/ASTR480 Code/Data Reduction Pipeline/"
-                 "ObsData_v3/FLAT")
+FLAT_path = Path("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/FLAT")
 good_files = []
 for i in to_include:
-    good_file = glob.glob("C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\ObsData_v3\\FLAT" 
-                          + i)
+    good_file = glob.glob("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/FLAT"+i)
     good_files += good_file
 
 # selecting images
@@ -86,8 +78,8 @@ MFLAT_imgs = ImageFileCollection(MFLAT_path, keywords='*')
 MFLAT_files = MFLAT_imgs.files_filtered(FIELD   = '              flat',
                                         include_path=True)
 
+test_fits_file = "//spcsfs/ave41/astro/ave41/UnitTest_ObsData/DARK/D21350-60-a-5.fit"
 
-test_fits_file = "C://Users//ave41//OneDrive - University of Canterbury//Master's 2021//ASTR480 Research//ASTR480 Code//Data Reduction Pipeline//DataReductionPipeline//tests//D21350-60-a-5.fit"
 BIAS_chips_files = chip_separator(BIAS_files)
 DARK_cal_chips_files = chip_separator(DARK_cal_files)
 

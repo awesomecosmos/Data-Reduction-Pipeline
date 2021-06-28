@@ -473,10 +473,12 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
     Nothing.
     """
     for f_index,FLAT_chips in enumerate(flat_chip_sep_files):
+    # for FLAT_chips in flat_chip_sep_files:
             # getting master darks for current chip
             MDARK_chips_file = MDARK_chip_sep_files[f_index]
-            
+            # print(MDARK_chips_file)
             for FLAT_file in FLAT_chips:
+                # print(FLAT_file)
                 hdu1 = fits.open(FLAT_file)
                 # extracting header data for later saving purposes
                 f_file_name = hdu1[0].header['RUN'].strip(' ')
@@ -485,7 +487,8 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                 f_chip_num = hdu1[0].header['CHIP']
                 
                 # making CCDData object for flat which we are calibrating
-                FLAT_ccd = CCDData.read(FLAT_file,unit=u.adu)
+                FLAT_ccd = CCDData.read(FLAT_file,unit='adu')
+                # FLAT_ccd = CCDData(FLAT_file,unit='adu')
                 
                 for mdark in MDARK_chips_file:
                     # finding master dark of matching exp
@@ -497,6 +500,7 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                     if mdark_exptime == flat_exptime:
                         MDARK_exptime = mdark_exptime
                         MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                        # MDARK_to_subtract = CCDData(mdark,unit='adu')
                         
                     else:
                         # Find the correct dark exposure
@@ -507,10 +511,10 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                 flat_exptime_u = flat_exptime*u.second   #produces a Quantity object
                 
                 cal_flat = ccdp.subtract_dark(ccd=FLAT_ccd, #CCD array of flat
-                                                     master=MDARK_to_subtract, #CCD array of master dark
-                                                     dark_exposure=MDARK_exptime_u,
-                                                     data_exposure=flat_exptime_u,
-                                                     scale=False)
+                                              master=MDARK_to_subtract, #CCD array of master dark
+                                              dark_exposure=MDARK_exptime_u,
+                                              data_exposure=flat_exptime_u,
+                                              scale=False)
                 # Save the result
                 cal_flat.write(FLAT_cal_path / 
                       "calibrated_flat-{}-{}-{}-{}.fit".format(f_file_name,flat_exptime,
@@ -572,46 +576,298 @@ def mflat_maker(cal_flat_chip_sep_files,MFLAT_path):
                                   'mflat-{}-chip{}.fit'.format(exptime,chip_num),
                                                                  overwrite=True)
             
-            
-            
-def img_counts(img_list,plots=False):
-    avg_counts = []
-    # avg_counts_dict=dict()
+     
+def flats_count_classifier(flats_lst):
+    """
+    This function categorises each master flat according to its counts.
     
-    for img in img_list:
-        image_data = fits.getdata(img)
+    Parameters (1)
+    --------------
+    flats_lst : list
+        List of master flats.
+    
+    Returns (5)
+    -----------
+    hi_counts_flats : list
+        List of flats with counts between 40,000 and 55,000.
+    
+    ok_counts_flats : list
+        List of flats with counts between 30,000 and 40,000.
+    
+    lo_counts_flats : list
+        List of flats with counts between 20,000 and 30,000.
+    
+    last_resort_flats : list
+        List of flats with counts between 55,000 and 63,000, or 10,000 and 20,000.
+    
+    trash_counts_flats : list
+        List of flats with counts above 63,000 or below 10,000.
+    
+    """
+    hi_counts_flats = ['hi_counts',[]]
+    ok_counts_flats = ['ok_counts',[]]
+    lo_counts_flats = ['lo_counts',[]]
+    last_resort_flats = ['last_resort',[]]
+    trash_counts_flats = ['trash_counts',[]]
+    
+    for flat_img in flats_lst:
+        flat_data = fits.getdata(flat_img)
+        # getting counts for flat
+        img_mean = np.mean(flat_data)
         
-        # extracting data from header for display purposes
-        hdu1 = fits.open(img)
-        # file_name = hdu1[0].header['RUN'].strip(' ')
-        # exptime = hdu1[0].header['EXPTIME']
-        # obs_set = hdu1[0].header['SET'].strip(' ')
-        chip_num = hdu1[0].header['CHIP']
-        img_name = 'chip{}.fit'.format(chip_num)
+        if img_mean <= 55000 and img_mean > 40000:
+            hi_counts_flats[1].append(flat_img)
+        elif img_mean <= 40000 and img_mean > 30000:
+            ok_counts_flats[1].append(flat_img)
+        elif img_mean <= 30000 and img_mean >= 20000:
+            lo_counts_flats[1].append(flat_img)
+        elif img_mean <= 63000 and img_mean > 55000:
+            last_resort_flats[1].append(flat_img)
+        elif img_mean < 20000 and img_mean >= 10000:
+            last_resort_flats[1].append(flat_img)
+        else: 
+            trash_counts_flats[1].append(flat_img)
+    
+    return hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats           
+            
+            
+def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
+    """
+    This function makes master flats for each chip for each category of counts.
+    
+    Parameters
+    ----------
+    counts_sep_flats : list
+        List of lists of catgories and their associated master flat filenames.
+    
+    MFLAT_counts_path : WindowsPath object
+        Path to directory where Master Flats by Counts are to be saved.
+    
+    Returns
+    -------
+    Nothing.
+    
+    """
+    # for each category of counts
+    for counts_sep_flats_categories in counts_sep_flats:
+        this_category = counts_sep_flats_categories[0] #extracting category as a str
+        counts_sep_flats_category = counts_sep_flats_categories[1]
+        
+        if len(counts_sep_flats_category) == 0:
+            pass
+        else:
+            # seperating list of flats in this category by chip num
+            chip_seperated_files = chip_separator(counts_sep_flats_category)
+            # for each array of files for each chip length:
+            for chip_files in chip_seperated_files:
+                if len(chip_files) == 0:
+                    pass
+                else:
+                    exptimes = []
+                    for chip_file in chip_files:
+                        # extracting header information for this set of files
+                        hdu1 = fits.open(chip_file)
+                        chip_num = hdu1[0].header['CHIP']
+                
+                    # combining all the flats of this set together
+                    master_flat = ccdp.combine(chip_files,unit=u.adu,
+                                              method='average',
+                                              sigma_clip=True, 
+                                              sigma_clip_low_thresh=5, 
+                                              sigma_clip_high_thresh=5,
+                                              sigma_clip_func=np.ma.median, 
+                                              sigma_clip_dev_func=mad_std,
+                                              mem_limit=350e6)
+                        
+                    # writing keywords to header
+                    master_flat.meta['combined'] = True
+                    master_flat.meta['CATEGORY'] = this_category
+                    master_flat.meta['CHIP'] = chip_num
+                        
+                    # writing combined dark as a fits file
+                    master_flat.write(MFLAT_counts_path / 
+                                          'mflat-{}-chip{}.fit'.format(this_category,chip_num),
+                                                                         overwrite=True)           
+            
+            
+def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
+                  MFLAT_counts_chips_files,MDARK_imgs,combined_darks):
+    """
+    This function reduces the ALERT data using the appropriate darks and flats.
+    
+    Parameters (6)
+    ----------
+    target_names_dict : dict
+        Dictionary of target names and their filenames.
+    
+    reduced_ALERT_path : WindowsPath object
+        Path to directory where Reduced ALERTs are to be saved.
+    
+    MDARK_chip_sep_files : list
+        List of list of master darks for each chip.
+    
+    MFLAT_counts_chips_files : list
+        List of list of master flats for each chip.
+    
+    MDARK_imgs : ImageFileCollection (ccdproc.image_collection.ImageFileCollection)
+        Image collection of master darks.
+    
+    combined_darks : dict
+        Dictionary of combined darks.
+    
+    Returns
+    -------
+    Nothing.
+    
+    """
+    for key, value in target_names_dict.items():
+        ALERT_chips_files = chip_separator(value)
+        
+        for a_index,ALERT_chips in enumerate(ALERT_chips_files):
+            # getting master darks  and flats for current chip
+            MDARK_chips_file = MDARK_chip_sep_files[a_index]
+            MFLAT_chips_file = MFLAT_counts_chips_files[a_index]
+            
+            ALERT_exptimes = exptime_checker(ALERT_chips)
+            
+            # finding closest dark exposure times to ALERT exposure times
+            d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                         combined=True)) 
+            for ALERT_file in ALERT_chips:
+                al_hdu1 = fits.open(ALERT_file)
+                # extracting header data for later saving purposes
+                al_file_name = al_hdu1[0].header['RUN'].strip(' ')
+                ALERT_exptime = al_hdu1[0].header['EXPTIME']
+                al_obs_set = al_hdu1[0].header['SET'].strip(' ')
+                al_chip_num = al_hdu1[0].header['CHIP']
+                al_filter = al_hdu1[0].header['COLOUR'].strip(' ')
+                    
+                # making CCDData object for ALERT which we are calibrating
+                ALERT_ccd = CCDData.read(ALERT_file,unit=u.adu)
+                    
+                for mdark in MDARK_chips_file:
+                    # finding master dark of matching exp
+                    mdark_hdu1 = fits.open(mdark)
+                    mdark_ccd = CCDData.read(mdark,unit=u.adu)
+                    mdark_exptime = mdark_hdu1[0].header['EXPTIME']
+                        
+                    # here, we are finding an exact match for the ALERT
+                    if mdark_exptime == ALERT_exptime:
+                        MDARK_exptime = mdark_exptime
+                        MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                        print("MDARK_exptime",MDARK_exptime)
+                            
+                    else:
+                        # Find the correct dark exposure
+                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
+                        MDARK_to_subtract = combined_darks[MDARK_exptime]
+                        print("MDARK_exptime",MDARK_exptime)
+                
+                # for mflat_lst in MFLAT_chips_file:
+                for mflat in MFLAT_chips_file:
+                    mflat_hdu1 = fits.open(mflat)
+                    mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                    mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                    mflat_category = mflat_hdu1[0].header['CATEGORY']
+                        
+                    if mflat_category == 'hi_counts':
+                        MFLAT_exptime = mflat_exptime
+                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    elif mflat_category == 'ok_counts':
+                        MFLAT_exptime = mflat_exptime
+                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    elif mflat_category == 'lo_counts':
+                        MFLAT_exptime = mflat_exptime
+                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    elif mflat_category == 'last_resort':
+                        MFLAT_exptime = mflat_exptime
+                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    else: #trash_counts
+                        MFLAT_exptime = mflat_exptime
+                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+            
+                reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                                             dark_frame=MDARK_to_subtract,
+                                             master_flat=MFLAT_to_divide,
+                                             data_exposure=ALERT_exptime*u.second,
+                                             dark_exposure=MDARK_exptime*u.second)
+                # writing keywords to header
+                reduced_ALERT.meta['reduced'] = True
+                reduced_ALERT.meta['EXPTIME'] = ALERT_exptime
+                reduced_ALERT.meta['CHIP'] = al_chip_num
+                reduced_ALERT.meta['RUN'] = al_file_name
+                reduced_ALERT.meta['SET'] = al_obs_set
+                reduced_ALERT.meta['COLOUR'] = al_filter
+                
+                # Save the result
+                reduced_ALERT.write(reduced_ALERT_path / 
+                              "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
+                                                                     al_file_name,
+                                                                     ALERT_exptime,
+                                                                     al_filter,
+                                                                     al_obs_set,
+                                                                     al_chip_num),
+                                                                     overwrite=True)           
 
-        # getting statistical data
-        img_min = np.min(image_data)
-        img_max = np.max(image_data)
-        img_mean = np.mean(image_data)
-        # img_std = np.std(image_data)
+
+def img_counts(img_list,plots=False):
+    """
+    This function finds the counts of the images.
+    
+    Parameters
+    ----------
+    img_list : list
+        List of images.
+    
+    plots : bool, optional
+        Boolean (True/False) of plot display option.
+    
+    Returns
+    -------
+    avg_counts_for_display : list
+        List of number of average counts.
+    
+    """
+    avg_counts_for_display = []
+    tot_avg_counts = []
+    img_exptimes = exptime_separator(img_list)
+    
+    for img_exptime in img_exptimes:
+        img_exp_chips = chip_separator(img_exptime)
+        for img_exp_chip in img_exp_chips:
+            avg_counts = []
+            for img in img_exp_chip:
+                image_data = fits.getdata(img)
+                # extracting data from header for display purposes
+                hdu1 = fits.open(img)
+                exptime = hdu1[0].header['EXPTIME']
+                chip_num = hdu1[0].header['CHIP']
+                img_name = 'chip{}.fit'.format(chip_num)
         
-        avg_counts.append('Chip'+str(chip_num)+':'+str(img_mean.round(2)))
-        
-        # setting number of bins 
-        NBINS = 100
-        
-        if plots==True:
-            plt.figure()
-            plt.hist(image_data.flatten(),bins=NBINS,label='counts')
-            plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
-            plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
-            plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
-            plt.legend()
-            plt.grid()
-            plt.xlabel('Count level in image')
-            plt.ylabel('Number of pixels with that count')
-            plt.title('Histogram of counts of {}'.format(img_name))
-            plt.savefig("hist_{}.jpg".format(img_name))
-            plt.show() 
-        
-    return avg_counts
+                # getting statistical data
+                img_min = np.min(image_data)
+                img_max = np.max(image_data)
+                img_mean = np.mean(image_data)
+                
+                avg_counts.append(img_mean)
+                
+                # setting number of bins 
+                NBINS = 100
+                
+                if plots==True:
+                    plt.figure()
+                    plt.hist(image_data.flatten(),bins=NBINS,label='counts')
+                    plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
+                    plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
+                    plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
+                    plt.legend()
+                    plt.grid()
+                    plt.xlabel('Count level in image')
+                    plt.ylabel('Number of pixels with that count')
+                    plt.title('Histogram of counts of {}'.format(img_name))
+                    plt.savefig("hist_{}.jpg".format(img_name))
+                    plt.show() 
+                
+                avg_counts_to_return = np.mean(avg_counts)
+            avg_counts_for_display.append('Chip'+str(chip_num)+':'+str(avg_counts_to_return.round(2)))
+    return avg_counts_for_display
