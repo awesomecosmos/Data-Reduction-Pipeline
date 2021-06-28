@@ -25,6 +25,13 @@ from drp_funcs import *
 # ASSUMPTIONS: all files we wish to reduce are in the starting folder (first path)
 # and are sorted into ALERT, DARK and FLAT folders
 
+# creating calibration log
+log_filename = "calibration_log.txt"
+log_path = Path(home_path + "\\" + log_filename)
+calibration_log = open(log_path,"w")
+calibration_log.write("Calibration Log for Data Reduction"+"\n")
+calibration_log.close()
+
 ###############################################################################
 #---------------------SECTION ONE: SORTING ALERTS-----------------------------# 
 ###############################################################################
@@ -69,6 +76,13 @@ for a_target in non_duplicated_targetnames:
         else:
             pass
     target_names_dict.update({a_target:lst_of_files})
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Target Names and Target Files"+"\n")
+for target_names,target_files in target_names_dict.items():
+    calibration_log.write(str(target_names)+str(target_files)+"\n")
+calibration_log.close()
 
 # getting exposore times for each target
 exptimes = []
@@ -116,10 +130,17 @@ BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
 BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
 BIAS_chips_files = chip_separator(BIAS_files)
 
-BIAS_counts = img_counts(BIAS_files)
+# BIAS_counts = img_counts(BIAS_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Bias Files"+"\n")
+for BIAS_chips_file in BIAS_chips_files:
+    calibration_log.write(str(BIAS_chips_file)+"\n")
+calibration_log.close()
 
 # calling mbias function to make master biases for each chip
-mbias_files_for_log = mbias_maker(BIAS_chips_files,MBIAS_path)
+mbias_maker(BIAS_chips_files,MBIAS_path)
 
 # reading in master bias files from Master Biases folder
 MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
@@ -128,6 +149,13 @@ MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
 MBIAS_chips_files = chip_separator(MBIAS_files)
 
 MBIAS_counts = img_counts(MBIAS_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Master Bias Files"+"\n")
+for MBIAS_chips_file in MBIAS_chips_files:
+    calibration_log.write(str(MBIAS_chips_file)+"\n")
+calibration_log.close()
 
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
@@ -157,14 +185,17 @@ for DARK_file in DARK_files:
 
 DARK_chips_files = chip_separator(good_DARK_files)
 
-DARK_counts = img_counts(good_DARK_files)
+#DARK_counts = img_counts(good_DARK_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Dark Files"+"\n")
+for DARK_chips_file in DARK_chips_files:
+    calibration_log.write(str(DARK_chips_file)+"\n")
+calibration_log.close()
 
 # calling dark_calibrator function to calibrate all the darks 
 dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
-
-print('DARK_counts',DARK_counts)
-print(" ")
-
 
 ##----------------------------MAKING MASTER DARKS----------------------------##
 # reading in calibrated dark files from Calibrated Darks folder
@@ -175,12 +206,6 @@ DARK_cal_chips_files = chip_separator(DARK_cal_files)
 
 DARK_cal_counts = img_counts(DARK_cal_files)
 
-print('DARK_cal_counts',DARK_cal_counts)
-print(" ")
-
-# uncomment the following line if you want image count statistics
-# code will take ~6 mins to run
-# img_stats(DARK_files)
 #%%
 # calling mdark_maker function to make master darks
 mdark_maker(DARK_cal_chips_files,MDARK_path)
@@ -192,7 +217,13 @@ MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDDat
 #%%
 MDARK_ccds = MDARK_imgs.ccds(COMBINED=True)
 MDARK_chips_files = chip_separator(MDARK_files)
-# MDARK_counts = img_counts(MDARK_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Master Dark Files"+"\n")
+for MDARK_chips_file in MDARK_chips_files:
+    calibration_log.write(str(MDARK_chips_file)+"\n")
+calibration_log.close()
 
 ##----------------------------------FLATS------------------------------------##
 # selecting images and excluding non-science images
@@ -207,11 +238,16 @@ FLAT_imgs = ImageFileCollection(filenames=good_files)
 FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
                                   include_path=True)
 
-# FLAT_counts = img_counts(FLAT_files)
-
 # sorting files appropriately for future use
 FLAT_exptimes = exptime_checker(FLAT_files)
 FLAT_chips_files = chip_separator(FLAT_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Flat Files"+"\n")
+for FLAT_chips_file in FLAT_chips_files:
+    calibration_log.write(str(FLAT_chips_file)+"\n")
+calibration_log.close()
 
 # finding closest dark exposure times to flat exposure times
 n_combined_dark = len(MDARK_files)
@@ -230,9 +266,14 @@ FLAT_cal_files = FLAT_cal_imgs.files_filtered(FIELD   = '              flat' ,
                                               include_path=True)
 FLAT_cal_chips_files = chip_separator(FLAT_cal_files)
 
-FLAT_cal_counts = img_counts(FLAT_cal_files)
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Calibrated Flat Files"+"\n")
+for FLAT_cal_chips_file in FLAT_cal_chips_files:
+    calibration_log.write(str(FLAT_cal_chips_file)+"\n")
+calibration_log.close()
 
-# calling mflat_maker function to make master darks
+# calling mflat_maker function to make master flats
 mflat_maker(FLAT_cal_chips_files,MFLAT_path)
 
 # reading in master flat files from Master Flats folder
@@ -248,6 +289,12 @@ MFLAT_counts = img_counts(MFLAT_files)
 hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats=flats_count_classifier(MFLAT_files)
 counts_sep_flats = [hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats]
 
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Categorised Master Flat Files"+"\n")
+for counts_sep_flat in counts_sep_flats:
+    calibration_log.write(str(counts_sep_flat)+"\n")
+calibration_log.close()
 #%%
 mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path)
 
@@ -259,8 +306,12 @@ MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat',
                              combined=True)
 MFLAT_counts_chips_files = chip_separator(MFLAT_counts_files)
 
-
-#================================ don't touch ================================#
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Final Categorised Master Flat Files"+"\n")
+for MFLAT_counts_chips_file in MFLAT_counts_chips_files:
+    calibration_log.write(str(MFLAT_counts_chips_file)+"\n")
+calibration_log.close()
 #%%
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------# 
@@ -269,6 +320,22 @@ MFLAT_counts_chips_files = chip_separator(MFLAT_counts_files)
 # reducing ALERT data
 ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,
               MFLAT_counts_chips_files,MDARK_imgs,combined_darks)
+
+#%%
+# reading in reduced ALERT files from Reduced ALERTS folder
+reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
+reduced_ALERT_files = reduced_ALERT_imgs.files_filtered(REDUCED = True,
+                                        include_path=True)
+reduced_ALERT_chips_files = chip_separator(reduced_ALERT_files)
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write("Reduced ALERT Files"+"\n")
+for reduced_ALERT_chips_file in reduced_ALERT_chips_files:
+    calibration_log.write(str(reduced_ALERT_chips_file)+"\n")
+calibration_log.close()
+
+#================================ don't touch ================================#
 
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------# 
