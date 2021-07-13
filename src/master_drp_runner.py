@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 
 ###############################################################################
-#---------------------SECTION ZERO: INITIALISATION----------------------------# 
+#---------------------SECTION ZERO: INITIALISATION----------------------------#
 ###############################################################################
 
 # initialising timer so we can count elapsed time
-from pytictoc import TicToc
-t = TicToc() # create TicToc instance
-t.tic() # Start timer
+# from pytictoc import TicToc
+# t = TicToc() # create TicToc instance
+# t.tic() # Start timer
 
 # importing packages
 import sys
 import os
 
 # initialising starting directory
-home_path = "C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\" \
-            "ASTR480 Research\\ASTR480 Code\\Data Reduction Pipeline\\DataReductionPipeline\\src"
+home_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
 os.chdir(home_path) #from now on, we are in this directory
 
 # importing functions
@@ -32,18 +31,18 @@ calibration_log.close()
 # and are sorted into ALERT, DARK and FLAT folders
 
 ##--------------------------PREPARATION WORK---------------------------------##
-# this is a list of file extensions we wish to keep. 
+# this is a list of file extensions we wish to keep.
 # It is assumed here we want Chips 1-10 only.
 to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
               '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
 
 #%%
 ###############################################################################
-#---------------------SECTION ONE: SORTING ALERTS-----------------------------# 
+#---------------------SECTION ONE: SORTING ALERTS-----------------------------#
 ###############################################################################
 
 # changing to ALERT folder
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -67,8 +66,8 @@ for file in good_ALERT_files:
 non_duplicated_targetnames = []
 for target in targetnames:
     if target not in non_duplicated_targetnames:
-    # this condition is to ensure that we don't have a list with 
-    # repeating target names. 
+    # this condition is to ensure that we don't have a list with
+    # repeating target names.
         non_duplicated_targetnames.append(target)
 
 # making dictionary of target name as key and list of corresponding files as value
@@ -94,24 +93,27 @@ calibration_log.close()
 # getting exposore times for each target
 exptimes = []
 for key,value in target_names_dict.items():
-    exptimes.append([key,exptime_checker(value)])  
+    exptimes.append([key,exptime_checker(value)])
 
+#%%
 ##-------------------------------PATHWORK------------------------------------##
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
-BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
-DARK_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
+DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
 # making/checking MDARK path/folder
 MDARK_path = path_checker(DARK_path,'Master Darks')
 
 # making/checking FLAT path/folder
-FLAT_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT")
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
+FLAT_path = Path(FLAT_path_str)
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
 # making/checking MFLAT path/folder
@@ -121,7 +123,7 @@ MFLAT_counts_path = path_checker(MFLAT_path,'Master Flats by Counts')
 
 #%%
 ###############################################################################
-#---------------------SECTION TWO: DATA REDUCTION-----------------------------# 
+#---------------------SECTION TWO: DATA REDUCTION-----------------------------#
 ###############################################################################
 
 ##---------------------------MAKING MASTER BIASES----------------------------##
@@ -172,8 +174,7 @@ calibration_log.close()
 # selecting images and excluding non-science images
 good_files = []
 for i in to_include:
-    good_file = glob.glob("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK" 
-                          + i)
+    good_file = glob.glob(DARK_path_str + i)
     good_files += good_file
 
 # selecting images
@@ -181,7 +182,7 @@ DARK_imgs = ImageFileCollection(filenames=good_files)
 DARK_files = DARK_imgs.files_filtered(FIELD='              dark',include_path=True)
 
 # now we need to get rid of the biases (0s and 1s exposures)
-# the >1 condition will take care of it - no darks strictly less than 1s 
+# the >1 condition will take care of it - no darks strictly less than 1s
 # will be calibrated. This is because sometimes the biases can be either 0s or 1s.
 good_DARK_files = []
 for DARK_file in DARK_files:
@@ -196,7 +197,7 @@ DARK_chips_files = chip_separator(good_DARK_files)
 # getting the number of counts for each dark
 DARK_counts = img_counts(good_DARK_files)
 
-# calling dark_calibrator function to calibrate all the darks 
+# calling dark_calibrator function to calibrate all the darks
 dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
 
 #%%
@@ -256,14 +257,65 @@ calibration_log.close()
 #%%
 ##----------------------------------FLATS------------------------------------##
 # selecting images and excluding non-science images
-good_files = []
+science_files = []
 for i in to_include:
-    good_file = glob.glob("//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT" 
-                          + i)
-    good_files += good_file
+    good_file = glob.glob(FLAT_path_str + i)
+    science_files += good_file
+
+def flats_selector(flats_txt,FLAT_path_str,science_files,include=True):
+    """
+    This function selects good or bad flats and filters them from the flats in
+    the directory.
+
+    Parameters
+    ----------
+    flats_txt : str
+        Name of text file containing filtering criteria for flats.
+        Example: 'flats.txt'
+
+    include : bool
+        True if need to include the filtering criteria. 
+        False if need to exclude the filtering criteria.
+        Default = True.
+    
+    FLAT_path_str : str
+        String of path to directory where Flats are stored.
+    
+    science_files : list
+        List of science files to use.
+
+    Returns
+    -------
+    good_flat_files : list
+        List of filenames to ues for further flats processing.
+    """
+    with open(flats_txt) as f:
+        list_of_selected_flats = f.read().splitlines() 
+    
+    good_flat_files = []
+    
+    if include is True:
+        for a_selected_flat in list_of_selected_flats:
+            good_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
+            good_flat_files += good_flat_file
+    
+    else:
+        bad_flat_files = []
+        for a_selected_flat in list_of_selected_flats:
+            bad_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
+            bad_flat_files += bad_flat_file
+
+        for science_flat in science_files:
+            if science_flat not in bad_flat_files:
+                good_flat_files.append(science_flat)
+    
+    return good_flat_files
+
+
+good_flat_files = flats_selector("flats.txt",FLAT_path_str,science_files,include=False)
 
 # selecting images
-FLAT_imgs = ImageFileCollection(filenames=good_files)
+FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
 FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
                                   include_path=True)
 
@@ -278,11 +330,11 @@ FLAT_chips_files = chip_separator(FLAT_files)
 
 # finding closest dark exposure times to flat exposure times
 n_combined_dark = len(MDARK_files)
-expected_exposure_times = set(FLAT_exptimes) 
+expected_exposure_times = set(FLAT_exptimes)
 actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(combined=True))
 combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
 
-# calling flat_calibrator function to calibrate all the flats 
+# calling flat_calibrator function to calibrate all the flats
 flat_calibrator(FLAT_chips_files,MDARK_chips_files,FLAT_cal_path,
                 actual_exposure_times,combined_darks)
 
@@ -306,7 +358,7 @@ mflat_maker(FLAT_cal_chips_files,MFLAT_path)
 MFLAT_imgs = ImageFileCollection(MFLAT_path, keywords='*')
 MFLAT_files = MFLAT_imgs.files_filtered(FIELD   = '              flat',
                                         include_path=True)
-MFLAT_ccds = MFLAT_imgs.ccds(FIELD   = '              flat', 
+MFLAT_ccds = MFLAT_imgs.ccds(FIELD   = '              flat',
                              combined=True)
 
 # separating the master flats by chip number
@@ -325,7 +377,7 @@ mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path)
 MFLAT_counts_imgs = ImageFileCollection(MFLAT_counts_path, keywords='*')
 MFLAT_counts_files = MFLAT_counts_imgs.files_filtered(FIELD   = '              flat',
                                         include_path=True)
-MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat', 
+MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat',
                              combined=True)
 
 # separating the master flats by counts by chip number
@@ -366,12 +418,12 @@ calibration_log.close()
 
 #%%
 ###############################################################################
-#--------------------SECTION THREE: IMAGE CALIBRATION-------------------------# 
+#--------------------SECTION THREE: IMAGE CALIBRATION-------------------------#
 ###############################################################################
 
 # reducing ALERT data
 ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,
-              MFLAT_counts_chips_files,MDARK_imgs,combined_darks)
+              MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots=True)
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
@@ -395,18 +447,20 @@ calibration_log.write("ALERT Counts"+"\n")
 calibration_log.write(str(MFLAT_counts)+"\n")
 calibration_log.close()
 
+#%%
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(reduced_ALERT_files)
+img_counts(reduced_ALERT_files,plots=True)
 
 #================================ don't touch ================================#
 
 ###############################################################################
-#-------------------------------END OF CODE-----------------------------------# 
-############################################################################### 
-
-t.toc() # Print elapsed time
-    
+#-------------------------------END OF CODE-----------------------------------#
 ###############################################################################
-#-------------------------------END OF CODE-----------------------------------# 
-############################################################################### 
+
+# t.toc() # Print elapsed time
+
+###############################################################################
+#-------------------------------END OF CODE-----------------------------------#
+###############################################################################
