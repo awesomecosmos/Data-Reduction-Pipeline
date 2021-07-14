@@ -219,7 +219,7 @@ def exptime_separator(IMAGElist):
 #----------------SECTION THREE: STATISTICAL FUNCTIONS-------------------------#
 ###############################################################################
 
-def img_stats(img_list):
+def img_stats(img_list,plots_path):
     """
     This function provides image count statistics for FITS files in an image
     list. It uses a violin plot to display the distribution of the counts.
@@ -228,6 +228,9 @@ def img_stats(img_list):
     ----------
     img_list : list
         List of filenames of FITS files.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
 
     Returns
     -------
@@ -252,10 +255,10 @@ def img_stats(img_list):
         ax = sns.violinplot(x=image_data.flatten(),color="mediumorchid")
         ax.set_title('Distribution of counts of {}'.format(img_name))
         ax.set_xlabel('Counts')
-        plt.savefig("Plots/violin_{}.jpg".format(img_name),dpi=900)
+        plt.savefig(plots_path/"violin_{}.jpg".format(img_name),dpi=900)
         plt.show()
 
-def img_counts(img_list,plots=False):
+def img_counts(img_list,plots_path=None,plots=False):
     """
     This function finds the counts of the images.
 
@@ -263,6 +266,9 @@ def img_counts(img_list,plots=False):
     ----------
     img_list : list
         List of images.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
 
     plots : bool, optional
         Boolean (True/False) of plot display option.
@@ -310,7 +316,7 @@ def img_counts(img_list,plots=False):
                     plt.xlabel('Count level in image')
                     plt.ylabel('Number of pixels with that count')
                     plt.title('Histogram of counts of {}'.format(img_name))
-                    plt.savefig("Plots/hist_{}.jpg".format(img_name))
+                    plt.savefig(plots_path/"hist_{}.jpg".format(img_name))
                     plt.show()
 
                 avg_counts_to_return = np.mean(avg_counts)
@@ -323,7 +329,7 @@ def img_counts(img_list,plots=False):
 #----------------SECTION FOUR: DATA REDUCTION FUNCTIONS-----------------------#
 ###############################################################################
 
-def mbias_maker(bias_chip_sep_files,MBIAS_path,plots=False):
+def mbias_maker(bias_chip_sep_files,MBIAS_path,plots_path=None,plots=False):
     """
     This function deals with making a master bias for each chip. It creates
     FITS master bias files for each chip, and can also show image comparisons
@@ -336,6 +342,12 @@ def mbias_maker(bias_chip_sep_files,MBIAS_path,plots=False):
 
     MBIAS_path : WindowsPath object
         Path to directory where Master Biases are to be saved.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+    
+    plots : bool, optional
+        Boolean (True/False) of plot display option.
 
     Returns
     -------
@@ -383,7 +395,7 @@ def mbias_maker(bias_chip_sep_files,MBIAS_path,plots=False):
             ax1.set_title('Single calibrated bias for Chip {}'.format(chip_num))
             show_image(master_bias.data, cmap='gray', ax=ax2, fig=fig, percl=90)
             ax2.set_title('Master Bias for Chip {}'.format(chip_num))
-            plt.savefig("Plots/bias_vs_mbias-{}-chip{}.jpg".format(exptime,chip_num))
+            plt.savefig(plots_path/"bias_vs_mbias-{}-chip{}.jpg".format(exptime,chip_num))
 
     return bias_list_to_return #to add to calibration log
 
@@ -447,7 +459,7 @@ def dark_calibrator(dark_chip_sep_files,MBIAS_chip_sep_files,DARK_cal_path):
                   / "calibrated_dark-{}".format(img_name),overwrite=True)
 
 
-def mdark_maker(dark_chip_sep_files,MDARK_path):
+def mdark_maker(dark_chip_sep_files,MDARK_path,plots_path=None,plots=False):
     """
     This function deals with making a master dark for each chip. It creates
     FITS master dark files for each chip for each exposure time, and can also
@@ -461,6 +473,12 @@ def mdark_maker(dark_chip_sep_files,MDARK_path):
 
     MDARK_path : WindowsPath object
         Path to directory where Master Darks are to be saved.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+    
+    plots : bool, optional
+        Boolean (True/False) of plot display option.
 
     Returns
     -------
@@ -476,10 +494,6 @@ def mdark_maker(dark_chip_sep_files,MDARK_path):
             hdu1 = fits.open(exptime_seperated_exps[0])
             exptime = hdu1[0].header['EXPTIME']
             chip_num = hdu1[0].header['CHIP']
-
-            # getting CCD image for plotting purposes
-            dark_fits = fits.getdata(exptime_seperated_exps[0])
-            dark_ccd = CCDData(dark_fits,unit=u.adu)
 
             # combining all the darks of this set together
             master_dark = ccdp.combine(exptime_seperated_exps,unit=u.adu,
@@ -500,18 +514,72 @@ def mdark_maker(dark_chip_sep_files,MDARK_path):
             master_dark.write(MDARK_path / 'mdark-{}-chip{}.fit'.format(exptime,
                                                                   chip_num),
                                                              overwrite=True)
-
-            # # plotting single dark compared to combined dark
-            # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-            # #plotting single dark for current chip
-            # show_image(dark_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
-            # ax1.set_title('Single calibrated dark for Chip {}'.format(chip_num))
-            # # plotting combined dark for current chip
-            # show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
-            # ax2.set_title('{}s Master Dark for Chip {}'.format(exptime,chip_num))
-            # plt.savefig("Plots/bias_vs_mbias-{}-chip{}.jpg".format(exptime,chip_num))
+            if plots==True:
+                # getting CCD image for plotting purposes
+                dark_fits = fits.getdata(exptime_seperated_exps[0])
+                dark_ccd = CCDData(dark_fits,unit=u.adu)
+                # plotting single dark compared to combined dark
+                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+                #plotting single dark for current chip
+                show_image(dark_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
+                ax1.set_title('Single calibrated dark for Chip {}'.format(chip_num))
+                # plotting combined dark for current chip
+                show_image(master_dark.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+                ax2.set_title('{}s Master Dark for Chip {}'.format(exptime,chip_num))
+                plt.savefig(plots_path/"cal-dark_vs_mdark-{}-chip{}.jpg".format(exptime,chip_num))
 
 #%%
+
+def flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True):
+    """
+    This function selects good or bad flats and filters them from the flats in
+    the directory.
+
+    Parameters
+    ----------
+    flats_txt_path : str
+        Name of text file containing filtering criteria for flats.
+        Example: 'flats.txt'
+
+    include : bool
+        True if need to include the filtering criteria. 
+        False if need to exclude the filtering criteria.
+        Default = True.
+    
+    FLAT_path_str : str
+        String of path to directory where Flats are stored.
+    
+    science_files : list
+        List of science files to use.
+
+    Returns
+    -------
+    good_flat_files : list
+        List of filenames to ues for further flats processing.
+    """
+    with open(flats_txt_path) as f:
+        list_of_selected_flats = f.read().splitlines() 
+    
+    good_flat_files = []
+    
+    if include is True:
+        for a_selected_flat in list_of_selected_flats:
+            good_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
+            good_flat_files += good_flat_file
+    
+    else:
+        bad_flat_files = []
+        for a_selected_flat in list_of_selected_flats:
+            bad_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
+            bad_flat_files += bad_flat_file
+
+        for science_flat in science_files:
+            if science_flat not in bad_flat_files:
+                good_flat_files.append(science_flat)
+    
+    return good_flat_files
+
+
 def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                     actual_exposure_times,combined_darks):
     """
@@ -760,11 +828,11 @@ def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
 
 
 def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
-                  MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots=False):
+                  MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots_path,plots=False):
     """
     This function reduces the ALERT data using the appropriate darks and flats.
 
-    Parameters (6)
+    Parameters (8)
     ----------
     target_names_dict : dict
         Dictionary of target names and their filenames.
@@ -783,6 +851,12 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
 
     combined_darks : dict
         Dictionary of combined darks.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+    
+    plots : bool, optional
+        Boolean (True/False) of plot display option.
 
     Returns
     -------
@@ -861,6 +935,13 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                                                  master_flat=MFLAT_to_divide,
                                                  data_exposure=ALERT_exptime*u.second,
                                                  dark_exposure=MDARK_exptime*u.second)
+                
+                filename_to_write = "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
+                                                                     al_file_name,
+                                                                     ALERT_exptime,
+                                                                     al_filter,
+                                                                     al_obs_set,
+                                                                     al_chip_num)
                 # writing keywords to header
                 reduced_ALERT.meta['reduced'] = True
                 reduced_ALERT.meta['EXPTIME'] = ALERT_exptime
@@ -868,23 +949,17 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                 reduced_ALERT.meta['RUN'] = al_file_name
                 reduced_ALERT.meta['SET'] = al_obs_set
                 reduced_ALERT.meta['COLOUR'] = al_filter
+                reduced_ALERT.meta['FILENAME'] = filename_to_write
 
                 # Save the result
-                reduced_ALERT.write(reduced_ALERT_path /
-                              "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
-                                                                     al_file_name,
-                                                                     ALERT_exptime,
-                                                                     al_filter,
-                                                                     al_obs_set,
-                                                                     al_chip_num),
-                                                                     overwrite=True)
+                reduced_ALERT.write(reduced_ALERT_path/filename_to_write,overwrite=True)
                 if plots==True:
                     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
                     show_image(ALERT_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
                     ax1.set_title('Raw ALERT Image for Chip {} for {}'.format(al_chip_num,key))
                     show_image(reduced_ALERT.data, cmap='gray', ax=ax2, fig=fig, percl=90)
                     ax2.set_title('Reduced ALERT Image for Chip {} for {}'.format(al_chip_num,key))
-                    plt.savefig("Plots/raw_vs_reduced_ALERT-{}-{}-{}-{}-{}-{}.jpg".format(key.strip(' '),
+                    plt.savefig(plots_path/"raw_vs_reduced_ALERT-{}-{}-{}-{}-{}-{}.jpg".format(key.strip(' '),
                                                                                           al_file_name,
                                                                                           ALERT_exptime,
                                                                                           al_filter,

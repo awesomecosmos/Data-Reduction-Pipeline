@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 #! /usr/bin/env python
-"""
-Created on Tue Apr  6 12:15:37 2021
 
-@author: ave41
-"""
 # importing drp functions from /src/ folder
 import sys
 sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\01 Data Reduction Pipeline\\DataReductionPipeline\\src")

@@ -5,9 +5,9 @@
 ###############################################################################
 
 # initialising timer so we can count elapsed time
-# from pytictoc import TicToc
-# t = TicToc() # create TicToc instance
-# t.tic() # Start timer
+from pytictoc import TicToc
+t = TicToc() # create TicToc instance
+t.tic() # Start timer
 
 # importing packages
 import sys
@@ -20,7 +20,12 @@ os.chdir(home_path) #from now on, we are in this directory
 # importing functions
 from drp_funcs import *
 
-# creating calibration log
+# creating paths
+flats_txt = "flats.txt"
+flats_txt_path = Path(home_path + "\\" + flats_txt)
+
+plots_path = Path(home_path + "\\Plots")
+
 log_filename = "calibration_log.txt"
 log_path = Path(home_path + "\\" + log_filename)
 calibration_log = open(log_path,"w")
@@ -43,6 +48,7 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
 
 # changing to ALERT folder
 ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
+# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -81,10 +87,12 @@ for a_target in non_duplicated_targetnames:
             lst_of_files.append(file)
         else:
             pass
-    target_names_dict.update({a_target:lst_of_files})
+    target_names_dict.update({a_target.strip():lst_of_files})
 
+spam = t.tocvalue()
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
 calibration_log.write("Target Names and Target Files"+"\n")
 for target_names,target_files in target_names_dict.items():
     calibration_log.write(str(target_names)+str(target_files)+"\n")
@@ -100,11 +108,13 @@ for key,value in target_names_dict.items():
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
 BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
+# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
 DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
+# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
 DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
@@ -113,6 +123,7 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 
 # making/checking FLAT path/folder
 FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
+# FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
 FLAT_path = Path(FLAT_path_str)
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
@@ -152,8 +163,11 @@ MBIAS_chips_files = chip_separator(MBIAS_files)
 # getting the number of counts for each master bias
 MBIAS_counts = img_counts(MBIAS_files)
 
+spam = t.tocvalue()
+
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
 calibration_log.write("Bias Files"+"\n")
 for BIAS_chips_file in BIAS_chips_files:
     calibration_log.write(str(BIAS_chips_file)+"\n")
@@ -228,8 +242,11 @@ MDARK_counts = img_counts(MDARK_files)
 # separating the master darks by chip number
 MDARK_chips_files = chip_separator(MDARK_files)
 
+spam = t.tocvalue()
+
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
 
 calibration_log.write("Dark Files"+"\n")
 for DARK_chips_file in DARK_chips_files:
@@ -262,57 +279,7 @@ for i in to_include:
     good_file = glob.glob(FLAT_path_str + i)
     science_files += good_file
 
-def flats_selector(flats_txt,FLAT_path_str,science_files,include=True):
-    """
-    This function selects good or bad flats and filters them from the flats in
-    the directory.
-
-    Parameters
-    ----------
-    flats_txt : str
-        Name of text file containing filtering criteria for flats.
-        Example: 'flats.txt'
-
-    include : bool
-        True if need to include the filtering criteria. 
-        False if need to exclude the filtering criteria.
-        Default = True.
-    
-    FLAT_path_str : str
-        String of path to directory where Flats are stored.
-    
-    science_files : list
-        List of science files to use.
-
-    Returns
-    -------
-    good_flat_files : list
-        List of filenames to ues for further flats processing.
-    """
-    with open(flats_txt) as f:
-        list_of_selected_flats = f.read().splitlines() 
-    
-    good_flat_files = []
-    
-    if include is True:
-        for a_selected_flat in list_of_selected_flats:
-            good_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
-            good_flat_files += good_flat_file
-    
-    else:
-        bad_flat_files = []
-        for a_selected_flat in list_of_selected_flats:
-            bad_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
-            bad_flat_files += bad_flat_file
-
-        for science_flat in science_files:
-            if science_flat not in bad_flat_files:
-                good_flat_files.append(science_flat)
-    
-    return good_flat_files
-
-
-good_flat_files = flats_selector("flats.txt",FLAT_path_str,science_files,include=False)
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True)
 
 # selecting images
 FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
@@ -383,8 +350,12 @@ MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat',
 # separating the master flats by counts by chip number
 MFLAT_counts_chips_files = chip_separator(MFLAT_counts_files)
 
+spam = t.tocvalue()
+
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
+
 calibration_log.write("Flat Files"+"\n")
 for FLAT_chips_file in FLAT_chips_files:
     calibration_log.write(str(FLAT_chips_file)+"\n")
@@ -416,14 +387,14 @@ calibration_log.close()
 # code will take ~6 mins to run
 # img_stats(MFLAT_counts_files)
 
-#%%
+
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------#
 ###############################################################################
-
+#%%
 # reducing ALERT data
 ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,
-              MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots=True)
+              MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots_path,plots=True)
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
@@ -436,8 +407,11 @@ reduced_ALERT_counts = img_counts(reduced_ALERT_files)
 # separating the reduced ALERTs by chip number
 reduced_ALERT_chips_files = chip_separator(reduced_ALERT_files)
 
+spam = t.tocvalue()
+
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
 calibration_log.write("Reduced ALERT Files"+"\n")
 for reduced_ALERT_chips_file in reduced_ALERT_chips_files:
     calibration_log.write(str(reduced_ALERT_chips_file)+"\n")
@@ -447,11 +421,11 @@ calibration_log.write("ALERT Counts"+"\n")
 calibration_log.write(str(MFLAT_counts)+"\n")
 calibration_log.close()
 
-#%%
+
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(reduced_ALERT_files)
-img_counts(reduced_ALERT_files,plots=True)
+img_counts(reduced_ALERT_files,plots_path,plots=True)
 
 #================================ don't touch ================================#
 
@@ -459,7 +433,14 @@ img_counts(reduced_ALERT_files,plots=True)
 #-------------------------------END OF CODE-----------------------------------#
 ###############################################################################
 
-# t.toc() # Print elapsed time
+t.toc() # Print elapsed time
+
+spam = t.tocvalue()
+
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
+calibration_log.close()
 
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------#
