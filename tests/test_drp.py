@@ -3,13 +3,18 @@
 
 # importing drp functions from /src/ folder
 import sys
-sys.path.insert(1,"C:\\Users\\ave41\\OneDrive - University of Canterbury\\Master's 2021\\ASTR480 Research\\ASTR480 Code\\01 Data Reduction Pipeline\\DataReductionPipeline\\src")
+sys.path.insert(1,"C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src")
 from drp_funcs import *
 import unittest
 
 ###############################################################################
 #---------------------SECTION ONE: READING IN DATA----------------------------# 
 ###############################################################################
+home_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
+
+# creating paths
+flats_txt = "flats.txt"
+flats_txt_path = Path(home_path + "\\" + flats_txt)
 
 # reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
@@ -53,14 +58,20 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
 MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                         include_path=True)
-FLAT_path = Path("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/FLAT")
-good_files = []
+
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
+FLAT_path = Path(FLAT_path_str)
+
+# selecting images and excluding non-science images
+science_files = []
 for i in to_include:
-    good_file = glob.glob("//spcsfs/ave41/astro/ave41/UnitTest_ObsData/FLAT"+i)
-    good_files += good_file
+    good_file = glob.glob(FLAT_path_str + i)
+    science_files += good_file
+
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True)
 
 # selecting images
-FLAT_imgs = ImageFileCollection(filenames=good_files)
+FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
 FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
                                   include_path=True)
 # making/checking Calibrated Flats path/folder
@@ -327,17 +338,40 @@ class Test(unittest.TestCase):
             print("The bias_chip_sep_files[0][0] is not a str. It should be a str.") 
 
 #------------------------------------------------------------------------------ 
+    
+    def test_flats_selector1(self):
+        """
+        Tests if list_of_selected_flats is a list.
+        """
+        with open(flats_txt_path) as f:
+             list_of_selected_flats = f.read().splitlines() 
+        try:
+            actual = type(list_of_selected_flats)
+            expected = list
+            self.assertEqual(actual,expected)
+        except:
+            print("The list_of_selected_flats is not a list. It should be a list. Check the input text file.") 
 
-    # def test_dark_calibrator1(self):
-    #     """
-    #     Tests if dark_chip_sep_files is a list.
-    #     """
-    
-    
-    
-    
-    
-    
+    def test_flats_selector2(self):
+        """
+        Tests if the boolean selection is working properly.
+        """ 
+        to_include = [True,False]
+        for boolean in to_include:
+            try:
+                actual = boolean
+                expected = None
+                
+                if boolean is True:
+                    expected = True
+                else:
+                    expected = False
+                
+                self.assertEqual(actual,expected)
+            except:
+                print("There is something wrong with the variable include.") 
+
+
 #================================ don't touch ================================#
 
 ###############################################################################
@@ -350,3 +384,11 @@ if __name__ == '__main__':
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------# 
 ############################################################################### 
+
+
+#------------------------------------------------------------------------------ 
+
+    # def test_dark_calibrator1(self):
+    #     """
+    #     Tests if dark_chip_sep_files is a list.
+    #     """
