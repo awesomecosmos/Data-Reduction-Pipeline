@@ -47,8 +47,8 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
 ###############################################################################
 
 # changing to ALERT folder
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
-# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
+# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -107,14 +107,14 @@ for key,value in target_names_dict.items():
 ##-------------------------------PATHWORK------------------------------------##
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
-BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
-# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
-DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
-# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
+# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
 DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
@@ -122,8 +122,8 @@ DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
 MDARK_path = path_checker(DARK_path,'Master Darks')
 
 # making/checking FLAT path/folder
-FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
-# FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
+# FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
 FLAT_path = Path(FLAT_path_str)
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
@@ -279,7 +279,7 @@ for i in to_include:
     good_file = glob.glob(FLAT_path_str + i)
     science_files += good_file
 
-good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True)
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=False)
 
 # selecting images
 FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
@@ -295,6 +295,19 @@ FLAT_exptimes = exptime_checker(FLAT_files)
 # separating the flats by chip number
 FLAT_chips_files = chip_separator(FLAT_files)
 
+spam = t.tocvalue()
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
+calibration_log.write("Flat Files"+"\n")
+for FLAT_chips_file in FLAT_chips_files:
+    calibration_log.write(str(FLAT_chips_file)+"\n")
+calibration_log.write("Flat Counts"+"\n")
+calibration_log.write(str(FLAT_counts)+"\n")
+calibration_log.close()
+
+
+##--------------------------CALIBRATING THE FLATS----------------------------##
 # finding closest dark exposure times to flat exposure times
 n_combined_dark = len(MDARK_files)
 expected_exposure_times = set(FLAT_exptimes)
@@ -305,8 +318,6 @@ combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
 flat_calibrator(FLAT_chips_files,MDARK_chips_files,FLAT_cal_path,
                 actual_exposure_times,combined_darks)
 
-#%%
-##----------------------------MAKING MASTER FLATS----------------------------##
 # reading in calibrated flat files from Calibrated Flats folder
 FLAT_cal_imgs = ImageFileCollection(FLAT_cal_path)
 FLAT_cal_files = FLAT_cal_imgs.files_filtered(FIELD   = '              flat' ,
@@ -318,6 +329,19 @@ FLAT_cal_counts = img_counts(FLAT_cal_files)
 # separating the calibrated flats by chip number
 FLAT_cal_chips_files = chip_separator(FLAT_cal_files)
 
+spam = t.tocvalue()
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
+calibration_log.write("Calibrated Flat Files"+"\n")
+for FLAT_cal_chips_file in FLAT_cal_chips_files:
+    calibration_log.write(str(FLAT_cal_chips_file)+"\n")
+calibration_log.write("Calibrated Flat Counts"+"\n")
+calibration_log.write(str(FLAT_cal_counts)+"\n")
+calibration_log.close()
+
+#%%
+##----------------------------MAKING MASTER FLATS----------------------------##
 # calling mflat_maker function to make master flats
 mflat_maker(FLAT_cal_chips_files,MFLAT_path)
 
@@ -333,6 +357,17 @@ MFLAT_chips_files = chip_separator(MFLAT_files)
 
 # getting the number of counts for each master flat
 MFLAT_counts = img_counts(MFLAT_files)
+
+spam = t.tocvalue()
+# writing calibration info to calibration log
+calibration_log = open(log_path,"a")
+calibration_log.write(str(spam)+"\n")
+calibration_log.write("Master Flat Files"+"\n")
+for MFLAT_chips_file in MFLAT_chips_files:
+    calibration_log.write(str(MFLAT_chips_file)+"\n")
+calibration_log.write("Master Flat Counts"+"\n")
+calibration_log.write(str(MFLAT_counts)+"\n")
+calibration_log.close()
 
 # categorising master flats by number of counts
 hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats=flats_count_classifier(MFLAT_files)
@@ -351,33 +386,12 @@ MFLAT_counts_ccds = MFLAT_counts_imgs.ccds(FIELD   = '              flat',
 MFLAT_counts_chips_files = chip_separator(MFLAT_counts_files)
 
 spam = t.tocvalue()
-
 # writing calibration info to calibration log
 calibration_log = open(log_path,"a")
 calibration_log.write(str(spam)+"\n")
-
-calibration_log.write("Flat Files"+"\n")
-for FLAT_chips_file in FLAT_chips_files:
-    calibration_log.write(str(FLAT_chips_file)+"\n")
-calibration_log.write("Flat Counts"+"\n")
-calibration_log.write(str(FLAT_counts)+"\n")
-
-calibration_log.write("Calibrated Flat Files"+"\n")
-for FLAT_cal_chips_file in FLAT_cal_chips_files:
-    calibration_log.write(str(FLAT_cal_chips_file)+"\n")
-calibration_log.write("Calibrated Flat Counts"+"\n")
-calibration_log.write(str(FLAT_cal_counts)+"\n")
-
-calibration_log.write("Master Flat Files"+"\n")
-for MFLAT_chips_file in MFLAT_chips_files:
-    calibration_log.write(str(MFLAT_chips_file)+"\n")
-calibration_log.write("Master Flat Counts"+"\n")
-calibration_log.write(str(MFLAT_counts)+"\n")
-
 calibration_log.write("Categorised Master Flat Files"+"\n")
 for counts_sep_flat in counts_sep_flats:
     calibration_log.write(str(counts_sep_flat)+"\n")
-
 calibration_log.write("Final Categorised Master Flat Files"+"\n")
 for MFLAT_counts_chips_file in MFLAT_counts_chips_files:
     calibration_log.write(str(MFLAT_counts_chips_file)+"\n")
@@ -386,7 +400,6 @@ calibration_log.close()
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
 # img_stats(MFLAT_counts_files)
-
 
 ###############################################################################
 #--------------------SECTION THREE: IMAGE CALIBRATION-------------------------#

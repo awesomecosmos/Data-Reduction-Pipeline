@@ -44,7 +44,7 @@ from convenience_functions import show_image
 #-------------------SECTION TWO: HELPER FUNCTIONS-----------------------------#
 ###############################################################################
 
-def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
+def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=60):
     """
     Find the nearest exposure time of a dark frame to the exposure time of the image,
     raising an error if the difference in exposure time is more than tolerance.
@@ -625,7 +625,6 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
 
                 # making CCDData object for flat which we are calibrating
                 FLAT_ccd = CCDData.read(FLAT_file,unit='adu')
-                # FLAT_ccd = CCDData(FLAT_file,unit='adu')
 
                 for mdark in MDARK_chips_file:
                     # finding master dark of matching exp
@@ -637,7 +636,6 @@ def flat_calibrator(flat_chip_sep_files,MDARK_chip_sep_files,FLAT_cal_path,
                     if mdark_exptime == flat_exptime:
                         MDARK_exptime = mdark_exptime
                         MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
-                        # MDARK_to_subtract = CCDData(mdark,unit='adu')
 
                     else:
                         # Find the correct dark exposure
