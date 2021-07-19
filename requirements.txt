@@ -1,0 +1,9 @@
+numpy
+scipy
+astropy
+ccdproc
+matplotlib
+os
+glob
+pathlib
+seaborn

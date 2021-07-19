@@ -903,36 +903,65 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                         MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
                         MDARK_to_subtract = combined_darks[MDARK_exptime]
                         print("MDARK_exptime",MDARK_exptime)
-
-                # for mflat_lst in MFLAT_chips_file:
-                for mflat in MFLAT_chips_file:
-                    mflat_hdu1 = fits.open(mflat)
-                    mflat_ccd = CCDData.read(mflat,unit=u.adu)
-                    mflat_exptime = mflat_hdu1[0].header['EXPTIME']
-                    mflat_category = mflat_hdu1[0].header['CATEGORY']
-
-                    if mflat_category == 'hi_counts':
-                        MFLAT_exptime = mflat_exptime
-                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                    elif mflat_category == 'ok_counts':
-                        MFLAT_exptime = mflat_exptime
-                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                    elif mflat_category == 'lo_counts':
-                        MFLAT_exptime = mflat_exptime
-                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                    elif mflat_category == 'last_resort':
-                        MFLAT_exptime = mflat_exptime
-                        MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                    else: #trash_counts
-                        # MFLAT_exptime = mflat_exptime
-                        # MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                        pass
-
-                reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
-                                                 dark_frame=MDARK_to_subtract,
-                                                 master_flat=MFLAT_to_divide,
-                                                 data_exposure=ALERT_exptime*u.second,
-                                                 dark_exposure=MDARK_exptime*u.second)
+                try:
+                    # for mflat_lst in MFLAT_chips_file:
+                    for mflat in MFLAT_chips_file:
+                        mflat_hdu1 = fits.open(mflat)
+                        mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                        mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                        mflat_category = mflat_hdu1[0].header['CATEGORY']
+    
+                        if mflat_category == 'hi_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'ok_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'lo_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'last_resort':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        else: #trash_counts
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                            
+                    
+                    reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                                                     dark_frame=MDARK_to_subtract,
+                                                     master_flat=MFLAT_to_divide,
+                                                     data_exposure=ALERT_exptime*u.second,
+                                                     dark_exposure=MDARK_exptime*u.second)
+                except UnboundLocalError:
+                    # for mflat_lst in MFLAT_chips_file:
+                    for mflat in MFLAT_chips_file:
+                        mflat_hdu1 = fits.open(mflat)
+                        mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                        mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                        mflat_category = mflat_hdu1[0].header['CATEGORY']
+    
+                        if mflat_category == 'hi_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'ok_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'lo_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'last_resort':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        else: #trash_counts
+                            pass
+                            
+                    reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                                                     dark_frame=MDARK_to_subtract,
+                                                     master_flat=MFLAT_to_divide,
+                                                     data_exposure=ALERT_exptime*u.second,
+                                                     dark_exposure=MDARK_exptime*u.second)
+                    
                 
                 filename_to_write = "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
                                                                      al_file_name,
