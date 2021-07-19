@@ -48,7 +48,7 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
 
 # changing to ALERT folder
 # ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v5/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -108,13 +108,13 @@ for key,value in target_names_dict.items():
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
 # BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
-BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v5/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
 # DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
-DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v5/DARK"
 DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
@@ -123,7 +123,7 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 
 # making/checking FLAT path/folder
 # FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
-FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v5/FLAT"
 FLAT_path = Path(FLAT_path_str)
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
@@ -229,12 +229,18 @@ DARK_cal_counts = img_counts(DARK_cal_files)
 
 # calling mdark_maker function to make master darks
 mdark_maker(DARK_cal_chips_files,MDARK_path)
-
+#%%
 # reading in master dark files from Master Darks folder
 MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
 MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                         include_path=True)
-MDARK_ccds = MDARK_imgs.ccds(COMBINED=True)
+MDARK_ccds = MDARK_imgs.ccds(COMBINED=True) #OG line
+# MDARK_ccds = MDARK_imgs.ccds(BUNIT   = 'adu     ')
+#delete this line when done
+combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
+print(combined_darks)
+
+#%%
 
 # getting the number of counts for each master dark
 MDARK_counts = img_counts(MDARK_files)
@@ -279,7 +285,7 @@ for i in to_include:
     good_file = glob.glob(FLAT_path_str + i)
     science_files += good_file
 
-good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=False)
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True)
 
 # selecting images
 FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
@@ -308,12 +314,13 @@ calibration_log.close()
 
 
 ##--------------------------CALIBRATING THE FLATS----------------------------##
+#%%
 # finding closest dark exposure times to flat exposure times
 n_combined_dark = len(MDARK_files)
 expected_exposure_times = set(FLAT_exptimes)
 actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(combined=True))
-combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
-
+# combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
+                
 # calling flat_calibrator function to calibrate all the flats
 flat_calibrator(FLAT_chips_files,MDARK_chips_files,FLAT_cal_path,
                 actual_exposure_times,combined_darks)
