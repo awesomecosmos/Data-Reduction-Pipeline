@@ -48,7 +48,7 @@ to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
 
 # changing to ALERT folder
 # ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_18022021/ALERT"
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v5/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -108,13 +108,13 @@ for key,value in target_names_dict.items():
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
 # BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK")
-BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v5/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
 # DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/DARK"
-DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v5/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
 DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
 DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
@@ -123,7 +123,7 @@ MDARK_path = path_checker(DARK_path,'Master Darks')
 
 # making/checking FLAT path/folder
 # FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
-FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v5/FLAT"
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
 FLAT_path = Path(FLAT_path_str)
 # making/checking Calibrated Flats path/folder
 FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')

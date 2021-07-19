@@ -1,9 +1,9 @@
 Calibration Log for Data Reduction
-16.513725700000002
+15.455185799999981
 Target Names and Target Files
 C2021_A6['//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-3.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-3.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-4.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-4.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-5.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-5.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-6.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-6.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-7.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-7.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-8.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-8.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-9.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-9.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4213-C2021_A6-R-10.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4214-C2021_A6-R-10.fit']
 2020_UB5['//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-3.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-3.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-4.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-4.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-5.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-5.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-6.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-6.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-7.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-7.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-8.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-8.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-9.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-9.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4228-2020_UB5-R-10.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT\\A4229-2020_UB5-R-10.fit']
-165.57198350000002
+181.9950846
 Bias Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-a-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-b-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-c-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21347-1-a-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21348-1-a-1.fit']
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-a-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-b-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21346-1-c-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21347-1-a-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\D21348-1-a-2.fit']
@@ -30,7 +30,7 @@ Master Bias Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\Master Biases\\mbias-1-chip10.fit']
 Master Bias Counts
 ['Chip1:942.01', 'Chip2:1196.37', 'Chip3:891.92', 'Chip4:1058.86', 'Chip5:1024.04', 'Chip6:935.92', 'Chip7:1032.21', 'Chip8:990.99', 'Chip9:999.54', 'Chip10:997.2']
-451.0174962
+436.5406296
 Dark Files
 ['//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-a-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-b-1.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-c-1.fit']
 ['//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-a-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-b-2.fit', '//spcsfs/ave41/astro/ave41/ObsData_v6/DARK\\D21341-60-c-2.fit']
@@ -70,7 +70,7 @@ Master Dark Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\DARK\\Master Darks\\mdark-60-chip10.fit']
 Master Dark Counts
 ['Chip1:-0.16', 'Chip2:-0.25', 'Chip3:0.55', 'Chip4:0.73', 'Chip5:0.15', 'Chip6:-0.46', 'Chip7:-0.26', 'Chip8:0.27', 'Chip9:-0.17', 'Chip10:-0.58']
-455.2615965
+441.10024
 Flat Files
 ['//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT\\F5793-20-R-a-1.fit']
 ['//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT\\F5793-20-R-a-2.fit']
@@ -84,7 +84,7 @@ Flat Files
 ['//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT\\F5793-20-R-a-10.fit']
 Flat Counts
 ['Chip1:65394.86', 'Chip2:65487.34', 'Chip3:65534.91', 'Chip4:65519.98', 'Chip5:65472.25', 'Chip6:64930.33', 'Chip7:65527.78', 'Chip8:65312.3', 'Chip9:65507.47', 'Chip10:65247.92']
-495.7249362
+482.35585990000004
 Calibrated Flat Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Calibrated Flats\\calibrated_flat-F5793-20-a-1.fit']
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Calibrated Flats\\calibrated_flat-F5793-20-a-2.fit']
@@ -98,7 +98,7 @@ Calibrated Flat Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Calibrated Flats\\calibrated_flat-F5793-20-a-10.fit']
 Calibrated Flat Counts
 ['Chip1:65395.04', 'Chip2:65487.52', 'Chip3:65535.08', 'Chip4:65520.15', 'Chip5:65472.42', 'Chip6:64930.51', 'Chip7:65527.96', 'Chip8:65312.47', 'Chip9:65507.64', 'Chip10:65248.1']
-584.7904249
+569.3122109
 Master Flat Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\mflat-20-chip1.fit']
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\mflat-20-chip2.fit']
@@ -112,7 +112,7 @@ Master Flat Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\mflat-20-chip10.fit']
 Master Flat Counts
 ['Chip1:65395.04', 'Chip2:65487.52', 'Chip3:65535.08', 'Chip4:65520.15', 'Chip5:65472.42', 'Chip6:64930.51', 'Chip7:65527.96', 'Chip8:65312.47', 'Chip9:65507.64', 'Chip10:65248.1']
-658.6491722
+648.7752821
 Categorised Master Flat Files
 ['hi_counts', []]
 ['ok_counts', []]
@@ -130,3 +130,20 @@ Final Categorised Master Flat Files
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\Master Flats by Counts\\mflat-trash_counts-chip8.fit']
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\Master Flats by Counts\\mflat-trash_counts-chip9.fit']
 ['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\FLAT\\Master Flats\\Master Flats by Counts\\mflat-trash_counts-chip10.fit']
+923.5347240000001
+Reduced ALERT Files
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-1.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-1.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-2.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-2.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-3.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-3.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-3.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-3.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-4.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-4.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-4.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-4.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-5.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-5.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-5.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-5.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-6.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-6.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-6.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-6.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-7.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-7.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-7.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-7.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-8.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-8.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-8.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-8.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-9.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-9.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-9.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-9.fit']
+['\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4228-60-R-a-10.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-2020_UB5-A4229-60-R-a-10.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4213-60-R-a-10.fit', '\\\\spcsfs\\ave41\\astro\\ave41\\ObsData_v6\\ALERT\\Reduced ALERT\\reduced-C2021_A6-A4214-60-R-a-10.fit']
+Reduced ALERT Counts
+['Chip1:1620.32', 'Chip1:1612.65', 'Chip1:1588.06', 'Chip1:1579.82', 'Chip2:1929.26', 'Chip2:1923.36', 'Chip2:1925.49', 'Chip2:1929.97', 'Chip3:1729.82', 'Chip3:1722.43', 'Chip3:1679.9', 'Chip3:1662.66', 'Chip4:1887.31', 'Chip4:1881.62', 'Chip4:1823.07', 'Chip4:1797.75', 'Chip5:1778.79', 'Chip5:1775.66', 'Chip5:1723.96', 'Chip5:1701.91', 'Chip6:1807.95', 'Chip6:1805.45', 'Chip6:1703.54', 'Chip6:1656.44', 'Chip7:1859.02', 'Chip7:1855.15', 'Chip7:1807.61', 'Chip7:1787.99', 'Chip8:1815.25', 'Chip8:1809.98', 'Chip8:1770.38', 'Chip8:1753.58', 'Chip9:1781.15', 'Chip9:1774.17', 'Chip9:1737.23', 'Chip9:1722.18', 'Chip10:1778.47', 'Chip10:1770.89', 'Chip10:1718.24', 'Chip10:1695.61']
+ALERT Counts
+['Chip1:65395.04', 'Chip2:65487.52', 'Chip3:65535.08', 'Chip4:65520.15', 'Chip5:65472.42', 'Chip6:64930.51', 'Chip7:65527.96', 'Chip8:65312.47', 'Chip9:65507.64', 'Chip10:65248.1']
+1008.8474080999999
