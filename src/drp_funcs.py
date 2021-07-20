@@ -530,7 +530,7 @@ def mdark_maker(dark_chip_sep_files,MDARK_path,plots_path=None,plots=False):
 
 #%%
 
-def flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True):
+def flats_selector(flats_txt_path,FLAT_path_str,science_files,include_flats=True):
     """
     This function selects good or bad flats and filters them from the flats in
     the directory.
@@ -557,12 +557,13 @@ def flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True):
     good_flat_files : list
         List of filenames to ues for further flats processing.
     """
-    with open(flats_txt_path) as f:
-        list_of_selected_flats = f.read().splitlines() 
     
     good_flat_files = []
     
-    if include is True:
+    with open(flats_txt_path) as f:
+        list_of_selected_flats = f.read().splitlines() 
+    
+    if include_flats is True:
         for a_selected_flat in list_of_selected_flats:
             good_flat_file = glob.glob(FLAT_path_str + a_selected_flat)
             good_flat_files += good_flat_file
