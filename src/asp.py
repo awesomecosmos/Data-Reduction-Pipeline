@@ -13,13 +13,6 @@ t.tic() # Start timer
 import sys
 import os
 
-# initialising starting directory
-code_home_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
-os.chdir(code_home_path) #from now on, we are in this directory
-
-# importing functions
-from drp_funcs import *
-
 # basic Python packages
 import numpy as np
 import matplotlib
@@ -51,6 +44,13 @@ from astroquery.astrometry_net import AstrometryNet
 # Misc packages
 import astroalign as aa
 
+# initialising starting directory
+code_home_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
+os.chdir(code_home_path) #from now on, we are in this directory
+
+# importing functions
+from drp_funcs import *
+
 #%%
 
 ###############################################################################
@@ -60,6 +60,7 @@ import astroalign as aa
 ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
+WCS_cal_path = path_checker(reduced_ALERT_path,'WCS Calibrated')
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
@@ -79,68 +80,79 @@ ast.api_key = "kbhqokfxlzyezitf"
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
 hdul = fits.open(single_test_img)
 hdr1 = hdul[0].header
-# extract stuff from header to write in filename later
-my_ra_key = str(hdul[0].header['RA-NOW  '])
-my_dec_key = str(hdul[0].header['DEC-NOW '])
-# my_ra_key = hdul[0].header['RA-NOW ']
-# my_dec_key = hdul[0].header['DEC-NOW']
-radius = 1 #degree
-# my_ra_dec_units = (u.arcsecond,u.arcsecond)
-my_ra_dec_units = ('second', 'arcsecond')
+
+run_filename = hdul[0].header['RUN'].strip(' ')
+exptime = hdul[0].header['EXPTIME']
+obs_set = hdul[0].header['SET'].strip(' ')
+chip_num = hdul[0].header['CHIP']
+filter_colour = hdul[0].header['COLOUR'].strip(' ')
+
+filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+                                                         filter_colour,obs_set,
+                                                         chip_num)
+
 #%%
 test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,force_image_upload=False)
-                                       # parity=2,
-                                       # ra_key='RA-NOW  ',dec_key='DEC-NOW ')
-                                       # ra_dec_units=my_ra_dec_units)
-
 #%%
-copied_img = "reduced-C2021_A6-A4213-60-R-a-3 - Copy.fit"
-# og_header = hdul.copy()
-# og_header.tofile(fileobj='new_file.fits', overwrite=False)
-test_wcs_header.tofile(fileobj=copied_img, overwrite=True)
-
-#%%
-
-new_hdu = fits.ImageHDU(test_wcs_header)
-
-og_header = hdul[0].header
-primary_hdu = fits.PrimaryHDU(header=og_header)
-
-new_hdul = fits.HDUList([primary_hdu, test_wcs_header])
-
-#%%
-
-new_hdul = fits.HDUList()
-new_hdul.append(fits.PrimaryHDU(header=hdr1))
-new_hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-
-new_hdul.writeto('new_test.fits', clobber=True)
-
-#%%
-
-#hdul.append(fits.PrimaryHDU(header=hdr1))
 hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-
-hdul.writeto('new_test.fits', clobber=True)
-
-#%%
-from astropy.coordinates import SkyCoord
-my_ra_key = hdul[0].header['RA-NOW ']
-my_dec_key = hdul[0].header['DEC-NOW']
-my_ra_dec_units = (u.arcsecond,u.arcsecond)
-
-yeet = SkyCoord(my_ra_key, my_dec_key, unit=my_ra_dec_units)
-print(yeet)
-
-#fwhm=3,
+hdul.writeto(filename_to_write,clobber=True)
 
 #%%
 wcs_headers_lst = []
 for reduced_ALERT_file in reduced_ALERT_files:
+    hdul = fits.open(single_test_img)
+    hdr1 = hdul[0].header
+    
+    run_filename = hdul[0].header['RUN'].strip(' ')
+    exptime = hdul[0].header['EXPTIME']
+    obs_set = hdul[0].header['SET'].strip(' ')
+    chip_num = hdul[0].header['CHIP']
+    filter_colour = hdul[0].header['COLOUR'].strip(' ')
+    
+    filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+                                                             filter_colour,obs_set,
+                                                             chip_num)
+    
     wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,force_image_upload=False)
-    #wcs_headers_lst.append(wcs_header)
+    
+    hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
+    hdul.writeto(filename_to_write,clobber=True)
 
+#%%
 
+for reduced_ALERT_file in reduced_ALERT_files:
+    try_again = True
+    submission_id = None
+    
+    hdul = fits.open(single_test_img)
+    hdr1 = hdul[0].header
+    
+    run_filename = hdul[0].header['RUN'].strip(' ')
+    exptime = hdul[0].header['EXPTIME']
+    obs_set = hdul[0].header['SET'].strip(' ')
+    chip_num = hdul[0].header['CHIP']
+    filter_colour = hdul[0].header['COLOUR'].strip(' ')
+    
+    filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+                                                             filter_colour,obs_set,
+                                                             chip_num)
+    
+    while try_again:
+        try:
+            if not submission_id:
+                wcs_header = ast.solve_from_image(reduced_ALERT_file,
+                                                  submission_id=submission_id,
+                                                  solve_timeout=10000,
+                                                  force_image_upload=False)
+            else:
+                wcs_header = ast.monitor_submission(submission_id,
+                                                    solve_timeout=100000)
+        except TimeoutError as e:
+            submission_id = e.args[1]
+        else:
+            # got a result, so terminate
+            try_again = False
+        
 #================================ don't touch ================================#
 
 ###############################################################################
