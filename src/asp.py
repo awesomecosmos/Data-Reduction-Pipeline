@@ -78,6 +78,7 @@ ast.api_key = "kbhqokfxlzyezitf"
 
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
 hdul = fits.open(single_test_img)
+hdr1 = hdul[0].header
 # extract stuff from header to write in filename later
 my_ra_key = str(hdul[0].header['RA-NOW  '])
 my_dec_key = str(hdul[0].header['DEC-NOW '])
@@ -86,6 +87,7 @@ my_dec_key = str(hdul[0].header['DEC-NOW '])
 radius = 1 #degree
 # my_ra_dec_units = (u.arcsecond,u.arcsecond)
 my_ra_dec_units = ('second', 'arcsecond')
+#%%
 test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,force_image_upload=False)
                                        # parity=2,
                                        # ra_key='RA-NOW  ',dec_key='DEC-NOW ')
@@ -96,6 +98,30 @@ copied_img = "reduced-C2021_A6-A4213-60-R-a-3 - Copy.fit"
 # og_header = hdul.copy()
 # og_header.tofile(fileobj='new_file.fits', overwrite=False)
 test_wcs_header.tofile(fileobj=copied_img, overwrite=True)
+
+#%%
+
+new_hdu = fits.ImageHDU(test_wcs_header)
+
+og_header = hdul[0].header
+primary_hdu = fits.PrimaryHDU(header=og_header)
+
+new_hdul = fits.HDUList([primary_hdu, test_wcs_header])
+
+#%%
+
+new_hdul = fits.HDUList()
+new_hdul.append(fits.PrimaryHDU(header=hdr1))
+new_hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
+
+new_hdul.writeto('new_test.fits', clobber=True)
+
+#%%
+
+#hdul.append(fits.PrimaryHDU(header=hdr1))
+hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
+
+hdul.writeto('new_test.fits', clobber=True)
 
 #%%
 from astropy.coordinates import SkyCoord
