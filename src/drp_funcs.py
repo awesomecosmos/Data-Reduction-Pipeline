@@ -925,8 +925,7 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                             MFLAT_exptime = mflat_exptime
                             MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
                         else: #trash_counts
-                            MFLAT_exptime = mflat_exptime
-                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                            pass
                             
                     
                     reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
@@ -955,7 +954,8 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                             MFLAT_exptime = mflat_exptime
                             MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
                         else: #trash_counts
-                            pass
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
                             
                     reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
                                                      dark_frame=MDARK_to_subtract,
@@ -980,12 +980,193 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                 reduced_ALERT.meta['FILENAME'] = filename_to_write
 
                 # Save the result
-                reduced_ALERT.write(reduced_ALERT_path/filename_to_write,overwrite=True)
+                reduced_ALERT.write(reduced_ALERT_path / filename_to_write,overwrite=True)
                 if plots==True:
                     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
                     show_image(ALERT_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
                     ax1.set_title('Raw ALERT Image for Chip {} for {}'.format(al_chip_num,key))
                     show_image(reduced_ALERT.data, cmap='gray', ax=ax2, fig=fig, percl=90)
+                    ax2.set_title('Reduced ALERT Image for Chip {} for {}'.format(al_chip_num,key))
+                    plt.savefig(plots_path/"raw_vs_reduced_ALERT-{}-{}-{}-{}-{}-{}.jpg".format(key.strip(' '),
+                                                                                          al_file_name,
+                                                                                          ALERT_exptime,
+                                                                                          al_filter,
+                                                                                          al_obs_set,
+                                                                                          al_chip_num))
+                    
+
+def ALERT_reducer2(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
+                  MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots_path,plots=False):
+    """
+    This function reduces the ALERT data using the appropriate darks and flats.
+
+    Parameters (8)
+    ----------
+    target_names_dict : dict
+        Dictionary of target names and their filenames.
+
+    reduced_ALERT_path : WindowsPath object
+        Path to directory where Reduced ALERTs are to be saved.
+
+    MDARK_chip_sep_files : list
+        List of list of master darks for each chip.
+
+    MFLAT_counts_chips_files : list
+        List of list of master flats for each chip.
+
+    MDARK_imgs : ImageFileCollection (ccdproc.image_collection.ImageFileCollection)
+        Image collection of master darks.
+
+    combined_darks : dict
+        Dictionary of combined darks.
+    
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+    
+    plots : bool, optional
+        Boolean (True/False) of plot display option.
+
+    Returns
+    -------
+    Nothing.
+
+    """
+    for key, value in target_names_dict.items():
+        ALERT_chips_files = chip_separator(value)
+
+        for a_index,ALERT_chips in enumerate(ALERT_chips_files):
+            # getting master darks  and flats for current chip
+            MDARK_chips_file = MDARK_chip_sep_files[a_index]
+            MFLAT_chips_file = MFLAT_counts_chips_files[a_index]
+
+            ALERT_exptimes = exptime_checker(ALERT_chips)
+
+            # finding closest dark exposure times to ALERT exposure times
+            d_actual_exposure_times = set(h['EXPTIME'] for h in MDARK_imgs.headers(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+                                                                         combined=True))
+            for ALERT_file in ALERT_chips:
+                al_hdu1 = fits.open(ALERT_file)
+                # extracting header data for later saving purposes
+                al_file_name = al_hdu1[0].header['RUN'].strip(' ')
+                ALERT_exptime = al_hdu1[0].header['EXPTIME']
+                al_obs_set = al_hdu1[0].header['SET'].strip(' ')
+                al_chip_num = al_hdu1[0].header['CHIP']
+                al_filter = al_hdu1[0].header['COLOUR'].strip(' ')
+
+                # making CCDData object for ALERT which we are calibrating
+                ALERT_ccd = CCDData.read(ALERT_file,unit=u.adu)
+
+                for mdark in MDARK_chips_file:
+                    # finding master dark of matching exp
+                    mdark_hdu1 = fits.open(mdark)
+                    mdark_ccd = CCDData.read(mdark,unit=u.adu)
+                    mdark_exptime = mdark_hdu1[0].header['EXPTIME']
+
+                    # here, we are finding an exact match for the ALERT
+                    if mdark_exptime == ALERT_exptime:
+                        MDARK_exptime = mdark_exptime
+                        MDARK_to_subtract = CCDData.read(mdark,unit=u.adu)
+                        print("MDARK_exptime",MDARK_exptime)
+
+                    else:
+                        # Find the correct dark exposure
+                        MDARK_exptime = find_nearest_dark_exposure(mdark_ccd,d_actual_exposure_times)
+                        MDARK_to_subtract = combined_darks[MDARK_exptime]
+                        print("MDARK_exptime",MDARK_exptime)
+                try:
+                    # for mflat_lst in MFLAT_chips_file:
+                    for mflat in MFLAT_chips_file:
+                        mflat_hdu1 = fits.open(mflat)
+                        mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                        mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                        mflat_category = mflat_hdu1[0].header['CATEGORY']
+    
+                        if mflat_category == 'hi_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'ok_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'lo_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'last_resort':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        else: #trash_counts
+                            pass
+                            
+                    dark_subtracted = ccdp.subtract_dark(ALERT_ccd,MDARK_to_subtract,
+                                                         dark_exposure=MDARK_exptime*u.second,
+                                                         data_exposure=ALERT_exptime*u.second)
+                    
+                    flat_subtracted = ccdp.flat_correct(dark_subtracted,MFLAT_to_divide)
+                    
+                    # reduced_ALERT = ccdp.ccd_process(ALERT_ccd,MFLAT_to_divide,)
+                    #                                  dark_frame=MDARK_to_subtract,
+                    #                                  master_flat=MFLAT_to_divide,
+                    #                                  data_exposure=ALERT_exptime*u.second,
+                    #                                  dark_exposure=MDARK_exptime*u.second)
+                except UnboundLocalError:
+                    # for mflat_lst in MFLAT_chips_file:
+                    for mflat in MFLAT_chips_file:
+                        mflat_hdu1 = fits.open(mflat)
+                        mflat_ccd = CCDData.read(mflat,unit=u.adu)
+                        mflat_exptime = mflat_hdu1[0].header['EXPTIME']
+                        mflat_category = mflat_hdu1[0].header['CATEGORY']
+    
+                        if mflat_category == 'hi_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'ok_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'lo_counts':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        elif mflat_category == 'last_resort':
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                        else: #trash_counts
+                            MFLAT_exptime = mflat_exptime
+                            MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
+                    
+                    dark_subtracted = ccdp.subtract_dark(ALERT_ccd,MDARK_to_subtract,
+                                                         dark_exposure=MDARK_exptime*u.second,
+                                                         data_exposure=ALERT_exptime*u.second)
+                    
+                    flat_subtracted = ccdp.flat_correct(dark_subtracted,MFLAT_to_divide)
+                            
+                    # reduced_ALERT = ccdp.ccd_process(ALERT_ccd,
+                    #                                  dark_frame=MDARK_to_subtract,
+                    #                                  master_flat=MFLAT_to_divide,
+                    #                                  data_exposure=ALERT_exptime*u.second,
+                    #                                  dark_exposure=MDARK_exptime*u.second)
+                    
+                
+                filename_to_write = "reduced-{}-{}-{}-{}-{}-{}.fit".format(key.strip(' '),
+                                                                     al_file_name,
+                                                                     ALERT_exptime,
+                                                                     al_filter,
+                                                                     al_obs_set,
+                                                                     al_chip_num)
+                # writing keywords to header
+                flat_subtracted.meta['reduced'] = True
+                flat_subtracted.meta['EXPTIME'] = ALERT_exptime
+                flat_subtracted.meta['CHIP'] = al_chip_num
+                flat_subtracted.meta['RUN'] = al_file_name
+                flat_subtracted.meta['SET'] = al_obs_set
+                flat_subtracted.meta['COLOUR'] = al_filter
+                flat_subtracted.meta['FILENAME'] = filename_to_write
+
+                # Save the result
+                flat_subtracted.write(reduced_ALERT_path / filename_to_write,overwrite=True)
+                
+                if plots==True:
+                    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+                    show_image(ALERT_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
+                    ax1.set_title('Raw ALERT Image for Chip {} for {}'.format(al_chip_num,key))
+                    show_image(flat_subtracted.data, cmap='gray', ax=ax2, fig=fig, percl=90)
                     ax2.set_title('Reduced ALERT Image for Chip {} for {}'.format(al_chip_num,key))
                     plt.savefig(plots_path/"raw_vs_reduced_ALERT-{}-{}-{}-{}-{}-{}.jpg".format(key.strip(' '),
                                                                                           al_file_name,

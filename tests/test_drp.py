@@ -68,7 +68,7 @@ for i in to_include:
     good_file = glob.glob(FLAT_path_str + i)
     science_files += good_file
 
-good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include=True)
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include_flats=True)
 
 # selecting images
 FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
