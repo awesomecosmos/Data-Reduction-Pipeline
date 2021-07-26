@@ -1,1 +1,3 @@
 src/Plots
+src/*.fit
+src/*.fits
