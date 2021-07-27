@@ -52,7 +52,6 @@ os.chdir(code_home_path) #from now on, we are in this directory
 from drp_funcs import *
 
 #%%
-
 ###############################################################################
 #---------------------SECTION ONE: INITIALISATION-----------------------------#
 ###############################################################################
@@ -62,7 +61,6 @@ os.chdir(ALERT_path) #from now on, we are in this directory
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # WCS_cal_path = path_checker(reduced_ALERT_path,'WCS Calibrated')
 WCS_cal_path = path_checker(code_home_path,'WCS Calibrated')
-
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
@@ -76,10 +74,12 @@ os.chdir(code_home_path) #from now on, we are in this directory
 #--------------------------SECTION TWO: ASTROMETRY----------------------------#
 ###############################################################################
 #%%
+
 ast = AstrometryNet()
 ast.api_key = "kbhqokfxlzyezitf"
 
-single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
+# single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
+single_test_img = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/reduced-C2021_A6-A4213-60-R-a-3.fit"
 single_test_img_hdul = fits.open(single_test_img)
 single_test_img_hdr1 = single_test_img_hdul[0].header
 
@@ -89,16 +89,13 @@ obs_set = single_test_img_hdul[0].header['SET'].strip(' ')
 chip_num = single_test_img_hdul[0].header['CHIP']
 filter_colour = single_test_img_hdul[0].header['COLOUR'].strip(' ')
 
-# filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-#                                                                       filter_colour,obs_set,
-#                                                                       chip_num)
-
 filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
                                                          filter_colour,obs_set,
                                                          chip_num)
 
 #%%
-test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,force_image_upload=False)
+test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
+                                       force_image_upload=False)
 #%%
 
 test_wcs_hdr_items = test_wcs_header.items() #produces a Generator object
@@ -106,7 +103,7 @@ it = iter(test_wcs_hdr_items) #produces a Generator object
 while True:
      try:
          my_items = next(it) #produces a Tuple
-         hdr_key = my_items[0]
+         hdr_key = my_items[0] 
          hdr_val = my_items[1]
          single_test_img_hdr1.set(hdr_key,hdr_val)
      except StopIteration:

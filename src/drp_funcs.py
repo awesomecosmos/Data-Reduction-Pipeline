@@ -1093,8 +1093,8 @@ def ALERT_reducer2(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                         elif mflat_category == 'last_resort':
                             MFLAT_exptime = mflat_exptime
                             MFLAT_to_divide = CCDData(mflat_ccd,unit=u.adu)
-                        else: #trash_counts
-                            pass
+                        # else: #trash_counts
+                        #     pass
                             
                     dark_subtracted = ccdp.subtract_dark(ALERT_ccd,MDARK_to_subtract,
                                                          dark_exposure=MDARK_exptime*u.second,
