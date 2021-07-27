@@ -80,14 +80,14 @@ ast = AstrometryNet()
 ast.api_key = "kbhqokfxlzyezitf"
 
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
-hdul = fits.open(single_test_img)
-hdr1 = hdul[0].header
+single_test_img_hdul = fits.open(single_test_img)
+single_test_img_hdr1 = single_test_img_hdul[0].header
 
-run_filename = hdul[0].header['RUN'].strip(' ')
-exptime = hdul[0].header['EXPTIME']
-obs_set = hdul[0].header['SET'].strip(' ')
-chip_num = hdul[0].header['CHIP']
-filter_colour = hdul[0].header['COLOUR'].strip(' ')
+run_filename = single_test_img_hdul[0].header['RUN'].strip(' ')
+exptime = single_test_img_hdul[0].header['EXPTIME']
+obs_set = single_test_img_hdul[0].header['SET'].strip(' ')
+chip_num = single_test_img_hdul[0].header['CHIP']
+filter_colour = single_test_img_hdul[0].header['COLOUR'].strip(' ')
 
 # filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
 #                                                                       filter_colour,obs_set,
@@ -100,13 +100,33 @@ filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
 #%%
 test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,force_image_upload=False)
 #%%
-hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-hdul.writeto(WCS_cal_path/filename_to_write,overwrite=True)
+
+test_wcs_hdr_items = test_wcs_header.items() #produces a Generator object
+it = iter(test_wcs_hdr_items) #produces a Generator object
+while True:
+     try:
+         my_items = next(it) #produces a Tuple
+         hdr_key = my_items[0]
+         hdr_val = my_items[1]
+         single_test_img_hdr1.set(hdr_key,hdr_val)
+     except StopIteration:
+         break
+
+#single_test_img_hdul.close()
+#%%
+single_test_img_hdul.writeto(single_test_img,overwrite=True)
+#%%
+
+# test_keys, test_values = test_wcs_header.items()
+# for i in range(len(test_wcs_header)):
+#     hdr1.set(test_keys[i],test_values[i])
+#%%
+# hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
+# hdul.writeto(WCS_cal_path/filename_to_write,overwrite=True)
 
 #%%
-wcs_headers_lst = []
 for reduced_ALERT_file in reduced_ALERT_files:
-    hdul = fits.open(single_test_img)
+    hdul = fits.open(reduced_ALERT_file)
     hdr1 = hdul[0].header
     
     run_filename = hdul[0].header['RUN'].strip(' ')
@@ -116,57 +136,57 @@ for reduced_ALERT_file in reduced_ALERT_files:
     filter_colour = hdul[0].header['COLOUR'].strip(' ')
     
     filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-                                                             filter_colour,obs_set,
-                                                             chip_num)
+                                                              filter_colour,obs_set,
+                                                              chip_num)
     
     wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,force_image_upload=False)
     
-    hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-    hdul.writeto(filename_to_write,clobber=True)
+    hdul.append(fits.ImageHDU(data=None, header=wcs_header, name='wcs_hdr'))
+    hdul.writeto(WCS_cal_path/filename_to_write,clobber=True)
 
-#%%
+# #%%
 
-for reduced_ALERT_file in reduced_ALERT_files:
-    try_again = True
-    submission_id = None
+# for reduced_ALERT_file in reduced_ALERT_files:
+#     try_again = True
+#     submission_id = None
     
-    hdul = fits.open(single_test_img)
-    hdr1 = hdul[0].header
+#     hdul = fits.open(single_test_img)
+#     hdr1 = hdul[0].header
     
-    run_filename = hdul[0].header['RUN'].strip(' ')
-    exptime = hdul[0].header['EXPTIME']
-    obs_set = hdul[0].header['SET'].strip(' ')
-    chip_num = hdul[0].header['CHIP']
-    filter_colour = hdul[0].header['COLOUR'].strip(' ')
+#     run_filename = hdul[0].header['RUN'].strip(' ')
+#     exptime = hdul[0].header['EXPTIME']
+#     obs_set = hdul[0].header['SET'].strip(' ')
+#     chip_num = hdul[0].header['CHIP']
+#     filter_colour = hdul[0].header['COLOUR'].strip(' ')
     
-    filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-                                                             filter_colour,obs_set,
-                                                             chip_num)
+#     filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+#                                                              filter_colour,obs_set,
+#                                                              chip_num)
     
-    while try_again:
-        try:
-            if not submission_id:
-                wcs_header = ast.solve_from_image(reduced_ALERT_file,
-                                                  submission_id=submission_id,
-                                                  solve_timeout=10000,
-                                                  force_image_upload=False)
-            else:
-                wcs_header = ast.monitor_submission(submission_id,
-                                                    solve_timeout=100000)
-        except TimeoutError as e:
-            submission_id = e.args[1]
-        else:
-            # got a result, so terminate
-            try_again = False
+#     while try_again:
+#         try:
+#             if not submission_id:
+#                 wcs_header = ast.solve_from_image(reduced_ALERT_file,
+#                                                   submission_id=submission_id,
+#                                                   solve_timeout=10000,
+#                                                   force_image_upload=False)
+#             else:
+#                 wcs_header = ast.monitor_submission(submission_id,
+#                                                     solve_timeout=100000)
+#         except TimeoutError as e:
+#             submission_id = e.args[1]
+#         else:
+#             # got a result, so terminate
+#             try_again = False
         
-#================================ don't touch ================================#
+# #================================ don't touch ================================#
 
-###############################################################################
-#-------------------------------END OF CODE-----------------------------------#
-###############################################################################
+# ###############################################################################
+# #-------------------------------END OF CODE-----------------------------------#
+# ###############################################################################
 
-t.toc() # Print elapsed time
+# t.toc() # Print elapsed time
 
-###############################################################################
-#-------------------------------END OF CODE-----------------------------------#
-###############################################################################
+# ###############################################################################
+# #-------------------------------END OF CODE-----------------------------------#
+# ###############################################################################
