@@ -60,7 +60,9 @@ from drp_funcs import *
 ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 os.chdir(ALERT_path) #from now on, we are in this directory
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
-WCS_cal_path = path_checker(reduced_ALERT_path,'WCS Calibrated')
+# WCS_cal_path = path_checker(reduced_ALERT_path,'WCS Calibrated')
+WCS_cal_path = path_checker(code_home_path,'WCS Calibrated')
+
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
@@ -87,7 +89,11 @@ obs_set = hdul[0].header['SET'].strip(' ')
 chip_num = hdul[0].header['CHIP']
 filter_colour = hdul[0].header['COLOUR'].strip(' ')
 
-filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+# filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+#                                                                       filter_colour,obs_set,
+#                                                                       chip_num)
+
+filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
                                                          filter_colour,obs_set,
                                                          chip_num)
 
@@ -95,7 +101,7 @@ filename_to_write = "WCS_cal_path/wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filena
 test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,force_image_upload=False)
 #%%
 hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-hdul.writeto(filename_to_write,clobber=True)
+hdul.writeto(WCS_cal_path/filename_to_write,overwrite=True)
 
 #%%
 wcs_headers_lst = []
