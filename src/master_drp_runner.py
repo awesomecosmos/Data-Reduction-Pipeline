@@ -319,6 +319,22 @@ calibration_log.write("Flat Counts"+"\n")
 calibration_log.write(str(FLAT_counts)+"\n")
 calibration_log.close()
 
+#%%
+# Import the ASTRiDE library.
+from astride import Streak
+
+# Read a fits image and create a Streak instance.
+streak = Streak(FLAT_chips_files[2][1])
+
+# Detect streaks.
+streak.detect()
+
+# Write outputs and plot figures.
+streak.write_outputs()
+streak.plot_figures()
+
+#%%
+
 
 ##--------------------------CALIBRATING THE FLATS----------------------------##
 
@@ -455,6 +471,23 @@ calibration_log.close()
 # code will take ~6 mins to run
 # img_stats(reduced_ALERT_files)
 # img_counts(reduced_ALERT_files,plots_path,plots=True)
+
+#%%
+
+# Import the ASTRiDE library.
+from astride import Streak
+
+# Read a fits image and create a Streak instance.
+streak = Streak(reduced_ALERT_files[0])
+
+# Detect streaks.
+streak.detect()
+
+# Write outputs and plot figures.
+streak.write_outputs()
+streak.plot_figures()
+
+#%%
 
 #================================ don't touch ================================#
 
