@@ -81,55 +81,6 @@ ast = AstrometryNet()
 ast.api_key = "kbhqokfxlzyezitf"
 
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
-# # single_test_img = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/reduced-C2021_A6-A4213-60-R-a-3.fit"
-# single_test_img_hdul = fits.open(single_test_img)
-# # single_test_img_hdul = fits.open(single_test_img,mode="update")
-# single_test_img_hdr1 = single_test_img_hdul[0].header
-
-# run_filename = single_test_img_hdul[0].header['RUN'].strip(' ')
-# exptime = single_test_img_hdul[0].header['EXPTIME']
-# obs_set = single_test_img_hdul[0].header['SET'].strip(' ')
-# chip_num = single_test_img_hdul[0].header['CHIP']
-# filter_colour = single_test_img_hdul[0].header['COLOUR'].strip(' ')
-
-# filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-#                                                          filter_colour,obs_set,
-#                                                          chip_num)
-
-# #%%
-# test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
-#                                        force_image_upload=False)
-# #%%
-# single_test_img_hdul.close(single_test_img)
-
-# #%%
-# a_single_test_img_hdul = fits.open(single_test_img,mode="update")
-# # single_test_img_hdr1 = single_test_img_hdul[0].header
-
-# fits.writeto(single_test_img,data=None,header=test_wcs_header,overwrite=True)
-
-# test_wcs_hdr_items = test_wcs_header.items() #produces a Generator object
-# it = iter(test_wcs_hdr_items) #produces a Generator object
-# while True:
-#      try:
-#          my_items = next(it) #produces a Tuple
-#          hdr_key = my_items[0] 
-#          hdr_val = my_items[1]
-#          single_test_img_hdr1.set(hdr_key,hdr_val)
-#      except StopIteration:
-#          break
-
-#single_test_img_hdul.close()
-#%%
-# single_test_img_hdul.writeto(single_test_img,overwrite=True)
-#%%
-
-# test_keys, test_values = test_wcs_header.items()
-# for i in range(len(test_wcs_header)):
-#     hdr1.set(test_keys[i],test_values[i])
-#%%
-# hdul.append(fits.ImageHDU(data=None, header=test_wcs_header, name='wcs_hdr'))
-# hdul.writeto(WCS_cal_path/filename_to_write,overwrite=True)
 
 with fits.open(single_test_img, "append") as single_test_img_hdul:
     single_test_img_hdr1 = single_test_img_hdul[0].header
@@ -142,13 +93,13 @@ with fits.open(single_test_img, "append") as single_test_img_hdul:
     filter_colour = single_test_img_hdul[0].header['COLOUR'].strip(' ')
     
     filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-                                                             filter_colour,obs_set,
-                                                             chip_num)
+                                                              filter_colour,obs_set,
+                                                              chip_num)
     
-    #%%
+
     test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
-                                           force_image_upload=False)
-    #%%
+                                            force_image_upload=False)
+
     single_test_img_new = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3-NEW.fit"
     test_wcs_hdr_items = test_wcs_header.items() #produces a Generator object
     it = iter(test_wcs_hdr_items) #produces a Generator object
@@ -162,68 +113,98 @@ with fits.open(single_test_img, "append") as single_test_img_hdul:
               break
     
     fits.writeto(single_test_img_new, data=single_test_img_data, header=single_test_img_hdr1, 
-                 output_verify="fix", overwrite=True)
+                  output_verify="fix", overwrite=True)
 
 #%%
 
 # #%%
 
-for reduced_ALERT_file in reduced_ALERT_files:
-    try_again = True
-    submission_id = None
+another_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
+
+yolo = []
+yolo.append(single_test_img)
+yolo.append(another_test_img)
+
+
+for reduced_ALERT_file in yolo:
+    with fits.open(reduced_ALERT_file, "append") as hdul:
+        hdr1 = hdul[0].header
+        data = hdul[0].data
+        
+        try_again = True
+        submission_id = None
+        
+        run_filename = hdul[0].header['RUN'].strip(' ')
+        exptime = hdul[0].header['EXPTIME']
+        obs_set = hdul[0].header['SET'].strip(' ')
+        chip_num = hdul[0].header['CHIP']
+        filter_colour = hdul[0].header['COLOUR'].strip(' ')
+        
+        filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+                                                                  filter_colour,obs_set,
+                                                                  chip_num)
+        while try_again:
+            try:
+                if not submission_id:
+                    wcs_header = ast.solve_from_image(reduced_ALERT_file,
+                                                      submission_id=submission_id,
+                                                      solve_timeout=10000,
+                                                      force_image_upload=False)
+                    #single_test_img_new = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3-NEW.fit"
+                    wcs_hdr_items = wcs_header.items() #produces a Generator object
+                    it = iter(wcs_hdr_items) #produces a Generator object
+                    while True:
+                          try:
+                              my_items = next(it) #produces a Tuple
+                              hdr_key = my_items[0] 
+                              hdr_val = my_items[1]
+                              hdr1.set(hdr_key,hdr_val)
+                          except StopIteration:
+                              break
+                    
+                    fits.writeto(WCS_cal_path/filename_to_write, data=data, header=hdr1, 
+                                  output_verify="fix", overwrite=True)
     
-    
-    
-    hdul = fits.open(reduced_ALERT_file)
-    hdr1 = hdul[0].header  
-    
-    run_filename = hdul[0].header['RUN'].strip(' ')
-    exptime = hdul[0].header['EXPTIME']
-    obs_set = hdul[0].header['SET'].strip(' ')
-    chip_num = hdul[0].header['CHIP']
-    filter_colour = hdul[0].header['COLOUR'].strip(' ')
-    
-    filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-                                                              filter_colour,obs_set,
-                                                              chip_num)
-    
-    while try_again:
-        try:
-            if not submission_id:
-                wcs_header = ast.solve_from_image(reduced_ALERT_file,
-                                                  submission_id=submission_id,
-                                                  solve_timeout=10000,
-                                                  force_image_upload=False)
+                else:
+                    wcs_header = ast.monitor_submission(submission_id,
+                                                        solve_timeout=100000)
+            except TimeoutError as e:
+                submission_id = e.args[1]
             else:
-                wcs_header = ast.monitor_submission(submission_id,
-                                                    solve_timeout=100000)
-        except TimeoutError as e:
-            submission_id = e.args[1]
-        else:
-            # got a result, so terminate
-            try_again = False
+                # got a result, so terminate
+                try_again = False
 
 
 
 #%%
-for reduced_ALERT_file in reduced_ALERT_files:
-    hdul = fits.open(reduced_ALERT_file)
-    hdr1 = hdul[0].header
+
+# yolo = []
+# yolo.append(single_test_img)
+
+# for reduced_ALERT_file in yolo:
+#     hdul = fits.open(reduced_ALERT_file)
+#     hdr1 = hdul[0].header
     
-    run_filename = hdul[0].header['RUN'].strip(' ')
-    exptime = hdul[0].header['EXPTIME']
-    obs_set = hdul[0].header['SET'].strip(' ')
-    chip_num = hdul[0].header['CHIP']
-    filter_colour = hdul[0].header['COLOUR'].strip(' ')
+#     run_filename = hdul[0].header['RUN'].strip(' ')
+#     exptime = hdul[0].header['EXPTIME']
+#     obs_set = hdul[0].header['SET'].strip(' ')
+#     chip_num = hdul[0].header['CHIP']
+#     filter_colour = hdul[0].header['COLOUR'].strip(' ')
     
-    filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
-                                                              filter_colour,obs_set,
-                                                              chip_num)
+#     filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fits".format(run_filename,exptime,
+#                                                               filter_colour,obs_set,
+#                                                               chip_num)
     
-    wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,force_image_upload=False)
+#     wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,
+#                                       force_image_upload=False)
     
-    hdul.append(fits.ImageHDU(data=None, header=wcs_header, name='wcs_hdr'))
-    hdul.writeto(WCS_cal_path/filename_to_write,clobber=True)
+#     # hdul.append(fits.ImageHDU(data=None, header=wcs_header, name='wcs_hdr'))
+#     # hdul.writeto(WCS_cal_path/filename_to_write,clobber=True)
+
+#%%
+
+
+    
     
 # # #================================ don't touch ================================#
 

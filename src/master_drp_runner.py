@@ -320,18 +320,18 @@ calibration_log.write(str(FLAT_counts)+"\n")
 calibration_log.close()
 
 #%%
-# Import the ASTRiDE library.
-from astride import Streak
+# # Import the ASTRiDE library.
+# from astride import Streak
 
-# Read a fits image and create a Streak instance.
-streak = Streak(FLAT_chips_files[2][1])
+# # Read a fits image and create a Streak instance.
+# streak = Streak(FLAT_chips_files[2][1],shape_cut=0.3)
 
-# Detect streaks.
-streak.detect()
+# # Detect streaks.
+# streak.detect()
 
-# Write outputs and plot figures.
-streak.write_outputs()
-streak.plot_figures()
+# # Write outputs and plot figures.
+# streak.write_outputs()
+# streak.plot_figures()
 
 #%%
 
@@ -478,7 +478,7 @@ calibration_log.close()
 from astride import Streak
 
 # Read a fits image and create a Streak instance.
-streak = Streak(reduced_ALERT_files[0])
+streak = Streak(reduced_ALERT_files[3])
 
 # Detect streaks.
 streak.detect()
