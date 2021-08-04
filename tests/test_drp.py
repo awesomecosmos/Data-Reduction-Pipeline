@@ -59,7 +59,7 @@ MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
 MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
                                         include_path=True)
 
-FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_18022021/FLAT"
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/UnitTest_ObsData/FLAT"
 FLAT_path = Path(FLAT_path_str)
 
 # selecting images and excluding non-science images
@@ -68,7 +68,7 @@ for i in to_include:
     good_file = glob.glob(FLAT_path_str + i)
     science_files += good_file
 
-good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include_flats=True)
+good_flat_files = flats_selector(flats_txt_path,FLAT_path_str,science_files,include_flats=False)
 
 # selecting images
 FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
