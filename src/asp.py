@@ -97,31 +97,12 @@ test_lst.append(another_test_img)
 
 test_lst2 = reduced_ALERT_files[:3]
 
+#%%
 for reduced_ALERT_file in test_lst2:
-    
-    try_again = True
-    submission_id = None
-    
-    while try_again:
-        try:
-            print("ACCEPTED for {}!".format(reduced_ALERT_file))
-            wcs_header = ast.solve_from_image(reduced_ALERT_file,
-                                                  #submission_id=submission_id,
-                                                  solve_timeout=10000,
-                                                  force_image_upload=False)
-        except TimeoutError as e:
-            print("FAIL for {}!".format(reduced_ALERT_file))
-            submission_id = e.args[1]
-        else:
-            # got a result, so terminate
-            try_again = False
-    
-    if wcs_header:
-        print("SUCCESS for {}!".format(reduced_ALERT_file))
-        ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_test_cal_path)
-    else:
-        # Code to execute when solve fails
-        print("FAIL")
+    wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,
+                                      force_image_upload=False)
+    ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_test_cal_path)
+#%%
 
 # for reduced_ALERT_file in test_lst2:
     
