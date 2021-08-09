@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# The aim of this code is to use astrometry.net to solve from a list of images.
+
 ###############################################################################
 #-------------------SECTION ZERO: IMPORTING PACKAGES--------------------------#
 ###############################################################################
@@ -65,10 +67,22 @@ reduced_ALERT_files = reduced_ALERT_imgs.files_filtered(REDUCED = True,
                                         include_path=True)
 
 # defining paths/reading in Test Data files
-ASP_test_data_path = Path("//spcsfs/ave41/astro/ave41/ASP_TestData_v1")
+ASP_test_data_path = Path("//spcsfs/ave41/astro/ave41/ASP_TestData_v1/")
 WCS_test_cal_path = path_checker(ASP_test_data_path,'WCS Calibrated')
 
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
+another_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
+another_test_img2 = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4265-300-R-a-3.fit"
+another_test_img3 = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
+
+testdata = [str(ASP_test_data_path) +"/" + n for n in os.listdir(ASP_test_data_path) if (n.endswith('fit') and n.__contains__('-60-')) ]
+
+# new_testdata = [single_test_img,single_test_img]
+
+# test_lst = []
+# test_lst.append(another_test_img2)
+# test_lst.append(another_test_img)
+# test_lst2 = reduced_ALERT_files[:3]
 
 ###############################################################################
 #--------------------------SECTION TWO: ASTROMETRY----------------------------#
@@ -83,58 +97,52 @@ ast = AstrometryNet()
 ast.api_key = "kbhqokfxlzyezitf" 
 
 #%%
-test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
+#--------------------------------------
+# Testing for 1 single image
+#
+test_wcs_header = ast.solve_from_image(another_test_img3,solve_timeout=1000,
                                             force_image_upload=False)
 
+# wcs_writer is a user-defined function to write the WCS header to the original image.
 test_ccd_obj = wcs_writer(test_wcs_header, single_test_img, WCS_test_cal_path)
-#%%
-
-another_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
-
-test_lst = []
-test_lst.append(single_test_img)
-test_lst.append(another_test_img)
-
-test_lst2 = reduced_ALERT_files[:3]
 
 #%%
-for reduced_ALERT_file in test_lst2:
-    wcs_header = ast.solve_from_image(reduced_ALERT_file,solve_timeout=10000,
-                                      force_image_upload=False)
-    ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_test_cal_path)
-#%%
+#--------------------------------------
+# Loop to read in a file from a list of files, and solve that file.
 
-# for reduced_ALERT_file in test_lst2:
+for reduced_ALERT_file in new_testdata:
     
-#     try_again = True
-#     submission_id = None
+    try_again = True
+    submission_id = None
     
-#     while try_again:
-#         try:
-#             if not submission_id:
-#                 print("ACCEPTED for {}!".format(reduced_ALERT_file))
-#                 wcs_header = ast.solve_from_image(reduced_ALERT_file,
-#                                                   #submission_id=submission_id,
-#                                                   solve_timeout=10000,
-#                                                   force_image_upload=False)
+    while try_again:
+        try:
+            if not submission_id:
+                print("ACCEPTED for {}!".format(reduced_ALERT_file))
+                wcs_header = ast.solve_from_image(reduced_ALERT_file,
+                                                  submission_id=submission_id,
+                                                  solve_timeout=10000,
+                                                  force_image_upload=False,
+                                                  ra_key="RA      ",
+                                                  dec_key="DEC     ")
     
-#             # else:
-#             #     print("FAIL for {}!".format(reduced_ALERT_file))
-#             #     wcs_header = ast.monitor_submission(submission_id,
-#             #                                         solve_timeout=100000)
-#         except TimeoutError as e:
-#             print("FAIL for {}!".format(reduced_ALERT_file))
-#             submission_id = e.args[1]
-#         else:
-#             # got a result, so terminate
-#             try_again = False
+            else:
+                print("FAIL for {}!".format(reduced_ALERT_file))
+                wcs_header = ast.monitor_submission(submission_id,
+                                                    solve_timeout=100000)
+        except TimeoutError as e:
+            print("FAIL for {}!".format(reduced_ALERT_file))
+            submission_id = e.args[1]
+        else:
+            # got a result, so terminate
+            try_again = False
     
-#     if wcs_header:
-#         print("SUCCESS for {}!".format(reduced_ALERT_file))
-#         ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_test_cal_path)
-#     else:
-#         # Code to execute when solve fails
-#         print("FAIL")
+    if wcs_header:
+        print("SUCCESS for {}!".format(reduced_ALERT_file))
+        ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_test_cal_path)
+    else:
+        # Code to execute when solve fails
+        print("FAIL")
 
 #%%    
 #================================ don't touch ================================#
