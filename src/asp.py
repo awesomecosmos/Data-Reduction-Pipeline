@@ -70,13 +70,16 @@ reduced_ALERT_files = reduced_ALERT_imgs.files_filtered(REDUCED = True,
 ASP_test_data_path = Path("//spcsfs/ave41/astro/ave41/ASP_TestData_v1/")
 WCS_test_cal_path = path_checker(ASP_test_data_path,'WCS Calibrated')
 
+# THIS IMAGE SOLVES SUCCESSFULLY
 single_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A6-A4213-60-R-a-3.fit"
+
+# THE NEXT THREE IMAGES DO NOT SOLVE SUCCESSFULLY
 another_test_img = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
 another_test_img2 = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4265-300-R-a-3.fit"
 another_test_img3 = "//spcsfs//ave41//astro//ave41//ASP_TestData_v1//reduced-C2021_A7-A4266-300-R-a-3.fit"
 
-testdata = [str(ASP_test_data_path) +"/" + n for n in os.listdir(ASP_test_data_path) if (n.endswith('fit') and n.__contains__('-60-')) ]
-
+# testdata = [str(ASP_test_data_path) +"/" + n for n in os.listdir(ASP_test_data_path) if (n.endswith('fit') and n.__contains__('-60-')) ]
+testdata = [str(ASP_test_data_path) +"/" + n for n in os.listdir(ASP_test_data_path) if (n.endswith('fit'))]
 # new_testdata = [single_test_img,single_test_img]
 
 # test_lst = []
@@ -100,7 +103,7 @@ ast.api_key = "kbhqokfxlzyezitf"
 #--------------------------------------
 # Testing for 1 single image
 #
-test_wcs_header = ast.solve_from_image(another_test_img3,solve_timeout=1000,
+test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
                                             force_image_upload=False)
 
 # wcs_writer is a user-defined function to write the WCS header to the original image.
@@ -110,7 +113,7 @@ test_ccd_obj = wcs_writer(test_wcs_header, single_test_img, WCS_test_cal_path)
 #--------------------------------------
 # Loop to read in a file from a list of files, and solve that file.
 
-for reduced_ALERT_file in new_testdata:
+for reduced_ALERT_file in testdata:
     
     try_again = True
     submission_id = None
