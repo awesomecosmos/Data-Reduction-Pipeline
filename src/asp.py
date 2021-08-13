@@ -53,6 +53,7 @@ os.chdir(code_home_path) #from now on, we are in this directory
 
 # importing functions
 from drp_funcs import *
+from asp_funcs import *
 
 #%%
 ###############################################################################
@@ -104,8 +105,8 @@ ast.api_key = "kbhqokfxlzyezitf"
 # Testing for 1 single image
 #
 test_wcs_header = ast.solve_from_image(single_test_img,solve_timeout=1000,
-                                            force_image_upload=False)
-
+                                   force_image_upload=True)
+#%%
 # wcs_writer is a user-defined function to write the WCS header to the original image.
 test_ccd_obj = wcs_writer(test_wcs_header, single_test_img, WCS_test_cal_path)
 
@@ -123,16 +124,16 @@ for reduced_ALERT_file in testdata:
             if not submission_id:
                 print("ACCEPTED for {}!".format(reduced_ALERT_file))
                 wcs_header = ast.solve_from_image(reduced_ALERT_file,
-                                                  submission_id=submission_id,
-                                                  solve_timeout=10000,
-                                                  force_image_upload=False,
-                                                  ra_key="RA      ",
-                                                  dec_key="DEC     ")
+                                              solve_timeout=1000,
+                                              submission_id=submission_id,
+                                              force_image_upload=True,
+                                              ra_key="RA      ",
+                                              dec_key="DEC     ")
     
             else:
                 print("FAIL for {}!".format(reduced_ALERT_file))
                 wcs_header = ast.monitor_submission(submission_id,
-                                                    solve_timeout=100000)
+                                                    solve_timeout=10000)
         except TimeoutError as e:
             print("FAIL for {}!".format(reduced_ALERT_file))
             submission_id = e.args[1]
