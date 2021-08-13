@@ -20,9 +20,9 @@ import os
 import glob
 from pathlib import Path
 
-# # warnings
-# import warnings
-# warnings.filterwarnings('ignore')
+# warnings
+import warnings
+warnings.filterwarnings('ignore')
 
 # Astropy packages
 import astropy
@@ -377,7 +377,58 @@ def flats_img_stats(flat_chip_sep_files,plots_path):
         plt.grid()
         plt.savefig(plots_path/"flat_stats_chip-{}.jpg".format(chip_num),dpi=900)
         plt.show()
-        
+
+def flats_run_diff(flat_chip_sep_files,plots_path):
+    """
+    This function compared the first flat from the folder and the last flat
+    of the folder, and produces a difference plot.
+    
+    # Currently this function will only work for Chip 3, though it can easily
+    be changed/generalised for other chips.
+
+    Parameters
+    ----------
+    flat_chip_sep_files : list
+        List of list of filenames of flats for each chip.
+
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+
+    Returns
+    -------
+    Comparison plot, saved.
+    
+    """
+    chip3 = flat_chip_sep_files[2]
+    
+    hdu1 = fits.open(chip3[0])
+    date1 = hdu1[0].header['DATE    ']
+    
+    hdu2 = fits.open(chip3[-1])
+    date2 = hdu2[0].header['DATE    ']
+    
+    first_flat_of_night = fits.getdata(chip3[0])
+    last_flat_of_night = fits.getdata(chip3[-1])
+    
+    # DARK_fits = fits.getdata(FLAT_files[0])
+    first_flat_of_night_ccd = CCDData(first_flat_of_night,unit=u.adu)
+    last_flat_of_night_ccd = CCDData(last_flat_of_night,unit=u.adu)
+    
+    diff = last_flat_of_night_ccd.subtract(first_flat_of_night_ccd)
+    
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 10))
+    
+    show_image(first_flat_of_night_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
+    ax1.set_title('First flat of run for Chip 3 ({})'.format(date1))
+    
+    show_image(last_flat_of_night_ccd, cmap='gray', ax=ax2, fig=fig, percl=90)
+    ax2.set_title('Last flat of run for Chip 3 ({})'.format(date2))
+    
+    show_image(diff, cmap='gray', ax=ax3, fig=fig, percl=90)
+    ax3.set_title('Difference between first and last flats of run for Chip 3')
+    
+    plt.savefig(plots_path/"flat_difference.jpg")
+    plt.show()
 #%%
 ###############################################################################
 #----------------SECTION FOUR: DATA REDUCTION FUNCTIONS-----------------------#
