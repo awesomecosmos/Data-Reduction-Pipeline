@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-###############################################################################
-#---------------------SECTION ZERO: INITIALISATION----------------------------#
-###############################################################################
-
 # initialising timer so we can count elapsed time
 from pytictoc import TicToc
 t = TicToc() # create TicToc instance
@@ -14,20 +10,86 @@ import sys
 import os
 
 # initialising starting directory
-home_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
-os.chdir(home_path) #from now on, we are in this directory
+code_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/DataReductionPipeline/src"
+os.chdir(code_path) #from now on, we are in this directory
 
 # importing functions
 from drp_funcs import *
 
+#%%
+###############################################################################
+#---------------------SECTION ZERO: INITIALISATION----------------------------#
+###############################################################################
+
+# ++++++++++++++++++++++++++++++++CHANGES++++++++++++++++++++++++++++++++++++++
+cal_log_date = "ObsData_v6"
+# ++++++++++++++++++++++++++++++++CHANGES++++++++++++++++++++++++++++++++++++++
+
+##-------------------------------PATHWORK------------------------------------##
+# changing to ALERT folder
+
+# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
+# ALERT_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/ALERT"
+
+reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
+
+# # reading in bias files from BIAS folder
+# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK")
+# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+# BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/DARK")
+# 
+# # making/checking MBIAS path/folder
+# MBIAS_path = path_checker(BIAS_path,'Master Biases')
+
+# reading in dark files from DARK folder
+
+# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
+# DARK_path_str = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/DARK"
+
+DARK_path = Path(DARK_path_str)
+
+# making/checking Calibrated Darks path/folder
+DARK_cal_path = path_checker(DARK_path,'Calibrated Darks')
+# making/checking MDARK path/folder
+MDARK_path = path_checker(DARK_path,'Master Darks')
+
+# making/checking FLAT path/folder
+
+# FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_17022021/FLAT"
+FLAT_path_str = "//spcsfs/ave41/astro/ave41/GoodFlats-2020-12-to-2021-02"
+# FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT"
+# FLAT_path_str = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/FLAT"
+
+FLAT_path = Path(FLAT_path_str)
+# making/checking Calibrated Flats path/folder
+FLAT_cal_path = path_checker(FLAT_path,'Calibrated Flats')
+
+# FLAT_cal_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/FLAT/Calibrated Flats"
+# FLAT_cal_path_str = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/FLAT/Calibrated Flats"
+# FLAT_cal_path_str = "//spcsfs/ave41/astro/ave41/ObsData_17022021/FLAT/Calibrated Flats"
+FLAT_cal_path_str = "//spcsfs/ave41/astro/ave41/GoodFlats-2020-12-to-2021-02/Calibrated Flats"
+
+# making/checking MFLAT path/folder
+MFLAT_path = path_checker(FLAT_path,'Master Flats')
+# making/checking MFLAT_counts path/folder
+MFLAT_counts_path = path_checker(MFLAT_path,'Master Flats by Counts')
+
+##--------------------------PREPARATION WORK---------------------------------##
+
 # creating paths
 flats_txt = "flats.txt"
-flats_txt_path = Path(home_path + "\\" + flats_txt)
+flats_txt_path = Path(code_path + "\\" + flats_txt)
 
-plots_path = Path(home_path + "\\Plots")
+outputs_path = path_checker(reduced_ALERT_path,'Outputs')
+plots_path = path_checker(outputs_path,'Plots')
 
-log_filename = "calibration_log.txt"
-log_path = Path(home_path + "\\" + log_filename)
+# plots_path = Path(reduced_ALERT_path + "\\Plots")
+
+log_filename = "calibration_log-{}.txt".format(cal_log_date)
+# calibration_log = open(code_path + "\\" + log_filename, "w")
+log_path = Path(outputs_path + "\\" + log_filename)
 calibration_log = open(log_path,"w")
 calibration_log.write("Calibration Log for Data Reduction"+"\n")
 calibration_log.close()
@@ -35,21 +97,25 @@ calibration_log.close()
 # ASSUMPTIONS: all files we wish to reduce are in the starting folder (first path)
 # and are sorted into ALERT, DARK and FLAT folders
 
-##--------------------------PREPARATION WORK---------------------------------##
 # this is a list of file extensions we wish to keep.
 # It is assumed here we want Chips 1-10 only.
-to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
-              '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+# to_include = ['/*-1.fit','/*-2.fit','/*-3.fit','/*-4.fit','/*-5.fit',
+#               '/*-6.fit','/*-7.fit','/*-8.fit','/*-9.fit','/*-10.fit']
+
+to_include = ['/*-3.fit']
 
 #%%
 ###############################################################################
 #---------------------SECTION ONE: SORTING ALERTS-----------------------------#
 ###############################################################################
 
+<<<<<<< Updated upstream
+=======
 # changing to ALERT folder
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/ALERT"
-# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
+# ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 # ALERT_path = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/ALERT"
+>>>>>>> Stashed changes
 os.chdir(ALERT_path) #from now on, we are in this directory
 
 # making list of all files in ALERT folder
@@ -105,19 +171,21 @@ for key,value in target_names_dict.items():
     exptimes.append([key,exptime_checker(value)])
 
 #%%
+<<<<<<< Updated upstream
+=======
 ##-------------------------------PATHWORK------------------------------------##
 reduced_ALERT_path = path_checker(ALERT_path,'Reduced ALERT')
 # reading in bias files from BIAS folder
-BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK")
-# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
+# BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK")
+BIAS_path = Path("//spcsfs/ave41/astro/ave41/ObsData_v6/DARK")
 # BIAS_path = Path("C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/DARK")
 # 
 # making/checking MBIAS path/folder
 MBIAS_path = path_checker(BIAS_path,'Master Biases')
 
 # reading in dark files from DARK folder
-DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK"
-# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
+# DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-17/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
 # DARK_path_str = "C:/Users/ave41/OneDrive - University of Canterbury/Master's 2021/ASTR480 Research/ASTR480 Code/01 Data Reduction Pipeline/ObsData_v3/DARK"
 DARK_path = Path(DARK_path_str)
 # making/checking Calibrated Darks path/folder
@@ -143,52 +211,53 @@ MFLAT_path = path_checker(FLAT_path,'Master Flats')
 MFLAT_counts_path = path_checker(MFLAT_path,'Master Flats by Counts')
 
 #%%
+>>>>>>> Stashed changes
 ###############################################################################
 #---------------------SECTION TWO: DATA REDUCTION-----------------------------#
 ###############################################################################
 
 ##---------------------------MAKING MASTER BIASES----------------------------##
-# selecting images
-BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
-# make this into a try/else block?
-BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
+# # selecting images
+# BIAS_imgs = ImageFileCollection(BIAS_path,glob_exclude=['/*-0.fit','/*-99.fit'])
+# # make this into a try/else block?
+# BIAS_files = BIAS_imgs.files_filtered(EXPTIME=1,include_path=True) # EXPTIME is either 0 or 1
 
-# separating the biases by chip number
-BIAS_chips_files = chip_separator(BIAS_files)
+# # separating the biases by chip number
+# BIAS_chips_files = chip_separator(BIAS_files)
 
-# getting the number of counts for each bias
-BIAS_counts = img_counts(BIAS_files)
+# # getting the number of counts for each bias
+# BIAS_counts = img_counts(BIAS_files)
 
-# calling mbias function to make master biases for each chip
-mbias_maker(BIAS_chips_files,MBIAS_path)
+# # calling mbias function to make master biases for each chip
+# mbias_maker(BIAS_chips_files,MBIAS_path)
 
-# reading in master bias files from Master Biases folder
-MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
-MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
-                                        include_path=True)
+# # reading in master bias files from Master Biases folder
+# MBIAS_imgs = ImageFileCollection(MBIAS_path, keywords='*')
+# MBIAS_files = MBIAS_imgs.files_filtered(COMBINED=True,
+#                                         include_path=True)
 
-# separating the master biases by chip number
-MBIAS_chips_files = chip_separator(MBIAS_files)
+# # separating the master biases by chip number
+# MBIAS_chips_files = chip_separator(MBIAS_files)
 
-# getting the number of counts for each master bias
-MBIAS_counts = img_counts(MBIAS_files)
+# # getting the number of counts for each master bias
+# MBIAS_counts = img_counts(MBIAS_files)
 
-spam = t.tocvalue()
+# spam = t.tocvalue()
 
-# writing calibration info to calibration log
-calibration_log = open(log_path,"a")
-calibration_log.write(str(spam)+"\n")
-calibration_log.write("Bias Files"+"\n")
-for BIAS_chips_file in BIAS_chips_files:
-    calibration_log.write(str(BIAS_chips_file)+"\n")
-calibration_log.write("Bias Counts"+"\n")
-calibration_log.write(str(BIAS_counts)+"\n")
-calibration_log.write("Master Bias Files"+"\n")
-for MBIAS_chips_file in MBIAS_chips_files:
-    calibration_log.write(str(MBIAS_chips_file)+"\n")
-calibration_log.write("Master Bias Counts"+"\n")
-calibration_log.write(str(MBIAS_counts)+"\n")
-calibration_log.close()
+# # writing calibration info to calibration log
+# calibration_log = open(log_path,"a")
+# calibration_log.write(str(spam)+"\n")
+# calibration_log.write("Bias Files"+"\n")
+# for BIAS_chips_file in BIAS_chips_files:
+#     calibration_log.write(str(BIAS_chips_file)+"\n")
+# calibration_log.write("Bias Counts"+"\n")
+# calibration_log.write(str(BIAS_counts)+"\n")
+# calibration_log.write("Master Bias Files"+"\n")
+# for MBIAS_chips_file in MBIAS_chips_files:
+#     calibration_log.write(str(MBIAS_chips_file)+"\n")
+# calibration_log.write("Master Bias Counts"+"\n")
+# calibration_log.write(str(MBIAS_counts)+"\n")
+# calibration_log.close()
 
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
@@ -221,29 +290,36 @@ DARK_chips_files = chip_separator(good_DARK_files)
 # getting the number of counts for each dark
 DARK_counts = img_counts(good_DARK_files)
 
-# calling dark_calibrator function to calibrate all the darks
-dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
+# # calling dark_calibrator function to calibrate all the darks
+# dark_calibrator(DARK_chips_files,MBIAS_chips_files,DARK_cal_path)
 
 #%%
 ##----------------------------MAKING MASTER DARKS----------------------------##
-# reading in calibrated dark files from Calibrated Darks folder
-DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
-DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
-                                              include_path=True)
+# # reading in calibrated dark files from Calibrated Darks folder
+# DARK_cal_imgs = ImageFileCollection(DARK_cal_path)
+# DARK_cal_files = DARK_cal_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+#                                               include_path=True)
 
-# separating the calibrated darks by chip number
-DARK_cal_chips_files = chip_separator(DARK_cal_files)
+# # separating the calibrated darks by chip number
+# DARK_cal_chips_files = chip_separator(DARK_cal_files)
 
-# getting the number of counts for each calibrated dark
-DARK_cal_counts = img_counts(DARK_cal_files)
+# # getting the number of counts for each calibrated dark
+# DARK_cal_counts = img_counts(DARK_cal_files)
+
+# # calling mdark_maker function to make master darks
+# mdark_maker(DARK_cal_chips_files,MDARK_path)
 
 # calling mdark_maker function to make master darks
-mdark_maker(DARK_cal_chips_files,MDARK_path)
+mdark_maker(DARK_chips_files,MDARK_path)
 #%%
 # reading in master dark files from Master Darks folder
 MDARK_imgs = ImageFileCollection(MDARK_path, keywords='*')
-MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+# MDARK_files = MDARK_imgs.files_filtered(SUBBIAS = 'ccd=<CCDData>, master=<CCDData>',
+#                                         include_path=True)
+MDARK_files = MDARK_imgs.files_filtered(FIELD='              dark',
                                         include_path=True)
+
+
 MDARK_ccds = MDARK_imgs.ccds(COMBINED=True) #OG line
 # MDARK_ccds = MDARK_imgs.ccds(BUNIT   = 'adu     ')
 combined_darks = {ccd.header['EXPTIME']: ccd for ccd in MDARK_ccds}
@@ -269,11 +345,11 @@ for DARK_chips_file in DARK_chips_files:
 calibration_log.write("Dark Counts"+"\n")
 calibration_log.write(str(DARK_counts)+"\n")
 
-calibration_log.write("Calibrated Dark Files"+"\n")
-for DARK_cal_chips_file in DARK_cal_chips_files:
-    calibration_log.write(str(DARK_cal_chips_file)+"\n")
-calibration_log.write("Calibrated Dark Counts"+"\n")
-calibration_log.write(str(DARK_cal_counts)+"\n")
+# calibration_log.write("Calibrated Dark Files"+"\n")
+# for DARK_cal_chips_file in DARK_cal_chips_files:
+#     calibration_log.write(str(DARK_cal_chips_file)+"\n")
+# calibration_log.write("Calibrated Dark Counts"+"\n")
+# calibration_log.write(str(DARK_cal_counts)+"\n")
 
 calibration_log.write("Master Dark Files"+"\n")
 for MDARK_chips_file in MDARK_chips_files:
@@ -301,6 +377,8 @@ FLAT_imgs = ImageFileCollection(filenames=good_flat_files)
 FLAT_files = FLAT_imgs.files_filtered(FIELD ='              flat',
                                   include_path=True)
 
+#%%
+
 # getting the number of counts for each flat
 FLAT_counts = img_counts(FLAT_files)
 
@@ -321,7 +399,63 @@ calibration_log.write("Flat Counts"+"\n")
 calibration_log.write(str(FLAT_counts)+"\n")
 calibration_log.close()
 
+#%%
 
+def flats_run_diff(flat_chip_sep_files,plots_path):
+    """
+    This function compared the first flat from the folder and the last flat
+    of the folder, and produces a difference plot.
+    
+    # Currently this function will only work for Chip 3, though it can easily
+    be changed/generalised for other chips.
+
+    Parameters
+    ----------
+    flat_chip_sep_files : list
+        List of list of filenames of flats for each chip.
+
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+
+    Returns
+    -------
+    Comparison plot, saved.
+    
+    """
+    chip3 = flat_chip_sep_files[2]
+    
+    hdu1 = fits.open(chip3[0])
+    date1 = hdu1[0].header['DATE    ']
+    
+    hdu2 = fits.open(chip3[-1])
+    date2 = hdu2[0].header['DATE    ']
+    
+    first_flat_of_night = fits.getdata(chip3[0])
+    last_flat_of_night = fits.getdata(chip3[-1])
+    
+    # DARK_fits = fits.getdata(FLAT_files[0])
+    first_flat_of_night_ccd = CCDData(first_flat_of_night,unit=u.adu)
+    last_flat_of_night_ccd = CCDData(last_flat_of_night,unit=u.adu)
+    
+    diff = last_flat_of_night_ccd.subtract(first_flat_of_night_ccd)
+    
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 10))
+    
+    show_image(first_flat_of_night_ccd, cmap='gray', ax=ax1, fig=fig, percl=90)
+    ax1.set_title('First flat of run for Chip 3 ({})'.format(date1))
+    
+    show_image(last_flat_of_night_ccd, cmap='gray', ax=ax2, fig=fig, percl=90)
+    ax2.set_title('Last flat of run for Chip 3 ({})'.format(date2))
+    
+    show_image(diff, cmap='gray', ax=ax3, fig=fig, percl=90)
+    ax3.set_title('Difference between first and last flats of run for Chip 3')
+    
+    plt.savefig(plots_path/"flat_difference.jpg")
+    plt.show()
+#%%
+flats_run_diff(FLAT_chips_files,plots_path)
+#%%
+flats_img_stats(FLAT_chips_files,plots_path)
 #%%
 ##--------------------------CALIBRATING THE FLATS----------------------------##
 
@@ -426,12 +560,12 @@ calibration_log.close()
 
 # reducing ALERT data
 ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,
-              MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots_path,plots=True)
+              MFLAT_counts_chips_files,MDARK_imgs,combined_darks,plots_path,plots=False)
 
 # reading in reduced ALERT files from Reduced ALERTS folder
 reduced_ALERT_imgs = ImageFileCollection(reduced_ALERT_path, keywords='*')
 reduced_ALERT_files = reduced_ALERT_imgs.files_filtered(REDUCED = True,
-                                        include_path=True)
+                                                        include_path=True)
 
 # getting the number of counts for each reduced ALERT
 reduced_ALERT_counts = img_counts(reduced_ALERT_files)
@@ -453,11 +587,11 @@ calibration_log.write("ALERT Counts"+"\n")
 calibration_log.write(str(MFLAT_counts)+"\n")
 calibration_log.close()
 
-
+#%%
 # uncomment the following line if you want image count statistics
 # code will take ~6 mins to run
-img_stats(reduced_ALERT_files)
-img_counts(reduced_ALERT_files,plots_path,plots=True)
+# img_stats(reduced_ALERT_files,plots_path)
+img_counts(reduced_ALERT_files,plots_path,plots=False)
 
 #%%
 

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+# This file contains all necessary packages and functions required for the 
+# Data Reduction Process. This file is required to run the file 
+# master_drp_runner.py.
+# Import it as: from drp_funcs import *
+
 ###############################################################################
 #-------------------SECTION ONE: IMPORTING PACKAGES---------------------------#
 ###############################################################################
@@ -15,9 +20,9 @@ import os
 import glob
 from pathlib import Path
 
-# warnings
-import warnings
-warnings.filterwarnings('ignore')
+# # warnings
+# import warnings
+# warnings.filterwarnings('ignore')
 
 # Astropy packages
 import astropy
@@ -325,6 +330,54 @@ def img_counts(img_list,plots_path=None,plots=False):
                 avg_counts_for_display.append('Chip'+str(chip_num_to_return)+':'+str(avg_counts_to_return.round(2)))
     return avg_counts_for_display
 
+def flats_img_stats(flat_chip_sep_files,plots_path):
+    """
+    This function extracts statistics for flats for each chip.
+
+    Parameters
+    ----------
+    flat_chip_sep_files : list
+        List of list of filenames of flats for each chip.
+
+    plots_path : WindowsPath object
+        Path to directory where Plots are to be saved.
+
+    Returns
+    -------
+    Statistical plots, saved.
+    
+    """
+    for index,flat_chip_sep_file in enumerate(flat_chip_sep_files):
+        chip_num = index+1
+        median_count = []
+        mean_count = []
+        
+        for a_file in flat_chip_sep_file:
+            hdu = fits.open(a_file)
+            image = hdu[0].data.astype(float)  
+            median_count.append(np.median(image))
+            mean_count.append(np.mean(image))
+        
+        min_count_for_median = np.min(median_count)
+        min_count_for_mean = np.min(mean_count)
+        max_count_for_median = np.max(median_count)
+        max_count_for_mean = np.max(mean_count)
+    
+        plt.plot(median_count, label='median',color="darkviolet")
+        plt.plot(mean_count, label='mean',color="palevioletred")
+        plt.axhline(y=min_count_for_median,linestyle='-',linewidth=0.5,color='red',label='min median {:.2f}'.format(min_count_for_median),alpha=1)
+        plt.axhline(y=min_count_for_mean,linestyle='-',linewidth=0.5,color='blue',label='min mean {:.2f}'.format(min_count_for_mean),alpha=1)
+        plt.axhline(y=max_count_for_median,linestyle='-',linewidth=0.5,color='red',label='max median {:.2f}'.format(max_count_for_median),alpha=1)
+        plt.axhline(y=max_count_for_mean,linestyle='-',linewidth=0.5,color='blue',label='max mean {:.2f}'.format(max_count_for_mean),alpha=1)
+                        
+        plt.xlabel('Image number')
+        plt.ylabel('Count (ADU)')
+        plt.title('Pixel value in raw flats for Chip {}'.format(chip_num))
+        plt.legend()
+        plt.grid()
+        plt.savefig(plots_path/"flat_stats_chip-{}.jpg".format(chip_num),dpi=900)
+        plt.show()
+        
 #%%
 ###############################################################################
 #----------------SECTION FOUR: DATA REDUCTION FUNCTIONS-----------------------#
@@ -768,6 +821,14 @@ def flats_count_classifier(flats_lst):
     return hi_counts_flats,ok_counts_flats,lo_counts_flats,last_resort_flats,trash_counts_flats
 
 
+
+
+def inv_median(a):
+    return 1 / np.median(a)
+
+
+
+
 def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
     """
     This function makes master flats for each chip for each category of counts.
@@ -808,6 +869,7 @@ def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
 
                     # combining all the flats of this set together
                     master_flat = ccdp.combine(chip_files,unit=u.adu,
+                                               scale=inv_median,
                                               method='average',
                                               sigma_clip=True,
                                               sigma_clip_low_thresh=5,
@@ -823,8 +885,8 @@ def mflat_maker_for_counts(counts_sep_flats,MFLAT_counts_path):
 
                     # writing combined dark as a fits file
                     master_flat.write(MFLAT_counts_path /
-                                          'mflat-{}-chip{}.fit'.format(this_category,chip_num),
-                                                                         overwrite=True)
+                                      'mflat-{}-chip{}.fit'.format(this_category,chip_num),
+                                      overwrite=True)
 
 
 def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
@@ -1175,51 +1237,6 @@ def ALERT_reducer2(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,
                                                                                           al_filter,
                                                                                           al_obs_set,
                                                                                           al_chip_num))
-                    
-#%%
-###############################################################################
-#------------------SECTION FIVE: ASTROMETRY FUNCTIONS-------------------------#
-###############################################################################
-
-def wcs_writer(wcs_header, image, WCS_cal_path):
-    """
-    This function writes the WCS header object information to the original
-    FITS file.
-    
-    Parameters
-    ----------
-    wcs_header : io.fits.header.Header
-        An Astropy Header object returned after solving using astrometry.net.
-    
-    image : str
-        Path of FITS image file to which WCS information is to be appended.
-    
-    WCS_cal_path : WindowsPath object
-        Path to directory where astrometrically-calibrated image is to be saved.
-    
-    Returns
-    -------
-    image_ccd_with_wcs : astropy.nddata.ccddata.CCDData
-        CCDData object of astrometrically-calibrated image.
-    """
-    with fits.open(image, "append") as img_hdul:
-        img_hdr1 = img_hdul[0].header
-        img_ccd = CCDData.read(image,unit=u.adu)
-    
-        run_filename = img_hdr1['RUN'].strip(' ')
-        exptime = img_hdr1['EXPTIME']
-        filter_colour = img_hdr1['COLOUR'].strip(' ')
-        obs_set = img_hdr1['SET'].strip(' ')
-        chip_num = img_hdr1['CHIP']
-        
-        filename_to_write = "wcs_cal-{}-{}-{}-{}-{}.fit".format(run_filename,exptime,
-                                                                filter_colour,obs_set,
-                                                                chip_num)
-        
-        img_ccd_object = CCDData(img_ccd, wcs=WCS(wcs_header))
-        img_ccd_object.write(WCS_cal_path/filename_to_write, overwrite=True)
-    
-    return img_ccd_object
 
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------#
