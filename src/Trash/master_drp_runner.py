@@ -504,6 +504,21 @@ def ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chip_sep_files,MFLA
 #%%
 ALERT_reducer(target_names_dict,reduced_ALERT_path,MDARK_chips_files,MFLAT_chips_files,
               MDARK_imgs,MFLAT_imgs,combined_darks,combined_flats)
+
+####
+# median_count = [np.median(data) for data in FLAT_imgs.data()]
+# mean_count = [np.mean(data) for data in FLAT_imgs.data()]
+# #%%
+
+# # make this so that it generates 1 plot per chip, so a total of 10 plots
+# plt.plot(median_count[20:30], label='median',color="darkviolet")
+# plt.plot(mean_count[20:30], label='mean',color="palevioletred")
+# plt.xlabel('Image number')
+# plt.ylabel('Count (ADU)')
+# plt.title('Pixel value in calibrated flat frames')
+# plt.legend()
+# print(median_count)
+
 #%%
 #================================ don't touch ================================#
 
