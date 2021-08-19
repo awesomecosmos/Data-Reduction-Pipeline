@@ -1,0 +1,14 @@
+# YAML 1.2
+---
+authors: 
+  -
+    family-names: Verma
+    given-names: "Aayushi A."
+    orcid: "https://orcid.org/0000-0003-2396-4569"
+cff-version: "1.1.0"
+keywords: 
+  - "data reduction"
+message: "If you use this software, please cite it using these metadata."
+title: ASTEROID
+version: "0.0.1"
+...
