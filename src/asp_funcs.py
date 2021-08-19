@@ -81,6 +81,88 @@ def wcs_writer(wcs_header, image, WCS_cal_path):
 #------------------SECTION TWO: ASTROMETRY FUNCTIONS-------------------------#
 ###############################################################################
 
+def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
+    for reduced_ALERT_file in lst_of_files:
+        
+        try_again = True
+        submission_id = None
+        
+        while try_again:
+            try:
+                if not submission_id:
+                    output_msg = "ACCEPTED for {}!".format(reduced_ALERT_file)
+                    print(output_msg)
+                    
+                    # writing Calibration Log
+                    calibration_log = open(cal_log_path,"w")
+                    calibration_log.write(output_msg+"\n")
+                    spam = t.tocvalue()
+                    calibration_log.write(str(spam)+"\n")
+                    calibration_log.close()
+                    
+                    # solving the image
+                    wcs_header = ast.solve_from_image(reduced_ALERT_file,
+                                                  solve_timeout=1000,
+                                                  submission_id=submission_id,
+                                                  force_image_upload=True)
+                                                  # ra_key="RA      ",
+                                                  # dec_key="DEC     ")
+        
+                else:
+                    output_msg = "FAIL for {}!".format(reduced_ALERT_file)
+                    print(output_msg)
+                    
+                    # writing Calibration Log
+                    calibration_log = open(cal_log_path,"w")
+                    calibration_log.write(output_msg+"\n")
+                    spam = t.tocvalue()
+                    calibration_log.write(str(spam)+"\n")
+                    calibration_log.close()
+                    
+                    # monitors submission 
+                    wcs_header = ast.monitor_submission(submission_id,
+                                                        solve_timeout=10000)
+            except TimeoutError as e:
+                output_msg = "FAIL for {}!".format(reduced_ALERT_file)
+                print(output_msg)
+                
+                # writing Calibration Log
+                calibration_log = open(cal_log_path,"w")
+                calibration_log.write(output_msg+"\n")
+                spam = t.tocvalue()
+                calibration_log.write(str(spam)+"\n")
+                calibration_log.close()
+                
+                # sets submission ID
+                submission_id = e.args[1]
+            else:
+                # got a result, so terminate
+                try_again = False
+        
+        if wcs_header:
+            output_msg = "SUCCESS for {}!".format(reduced_ALERT_file)
+            print(output_msg)
+            
+            # writing Calibration Log
+            calibration_log = open(cal_log_path,"w")
+            calibration_log.write(output_msg+"\n")
+            spam = t.tocvalue()
+            calibration_log.write(str(spam)+"\n")
+            calibration_log.close()
+            
+            # writing the new header to the original file
+            ccd_obj = wcs_writer(wcs_header, reduced_ALERT_file, WCS_cal_path)
+        else:
+            # Code to execute when solve fails
+            output_msg = "FAIL for {}! Something has gone wrong.".format(reduced_ALERT_file)
+            print(output_msg)
+            
+            # writing Calibration Log
+            calibration_log = open(cal_log_path,"w")
+            calibration_log.write(output_msg+"\n")
+            spam = t.tocvalue()
+            calibration_log.write(str(spam)+"\n")
+            calibration_log.close()
 
 # ###############################################################################
 # #-------------------------------END OF CODE-----------------------------------#
