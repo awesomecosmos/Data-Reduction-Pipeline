@@ -24,14 +24,14 @@ from drp_funcs import *
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ++++++++++++++++++++++++++++++++CHANGES++++++++++++++++++++++++++++++++++++++
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-this_dataset = "ObsData-2021-02-18"
+this_dataset = "ObsData-2021-01-21"
 
 ##-------------------------------PATHWORK------------------------------------##
 
-ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-18/ALERT"
+ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData-2021-01-21/ALERT"
 # ALERT_path = "//spcsfs/ave41/astro/ave41/ObsData_v6/ALERT"
 
-DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData-2021-02-18/DARK"
+DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData-2021-01-21/DARK"
 # DARK_path_str = "//spcsfs/ave41/astro/ave41/ObsData_v6/DARK"
 
 # FLAT_path_str = "//spcsfs/ave41/astro/ave41/ObsData_17022021/FLAT"
@@ -395,21 +395,19 @@ calibration_log.close()
 
 #%%
 # uncomment the following line if you want image count statistics
-# code will take ~6 mins to run
-# img_stats(reduced_ALERT_files,plots_path)
-img_counts(reduced_ALERT_files,plots_path,plots=True)
-
-#%%
+try:
+    img_stats(reduced_ALERT_files,plots_path)
+    img_counts(reduced_ALERT_files,plots_path,plots=True)
+except:
+    pass
 series_img_stats(reduced_ALERT_chips_files,'reduced-alerts',plots_path)
-
-#%%
 
 #================================ don't touch ================================#
 
 ###############################################################################
 #-------------------------------END OF CODE-----------------------------------#
 ###############################################################################
-
+#%%
 t.toc() # Print elapsed time
 
 spam = t.tocvalue()

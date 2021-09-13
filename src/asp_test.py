@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 31 18:53:06 2021
+
+@author: ave41
+"""
+
+# -*- coding: utf-8 -*-
 
 # The aim of this code is to use astrometry.net to solve from a list of images.
 
@@ -55,47 +62,39 @@ os.chdir(code_home_path) #from now on, we are in this directory
 from drp_funcs import *
 from asp_funcs import *
 
+#%%
 ###############################################################################
 #---------------------SECTION ONE: INITIALISATION-----------------------------#
 ###############################################################################
-
 date_of_calibration = datetime.today().strftime('%Y-%m-%d')
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# ++++++++++++++++++++++++++++++++CHANGES++++++++++++++++++++++++++++++++++++++
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCHANGESvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+test_cal_log_filename = "ASP_TestData_v1"
 
-cal_log_filename = "ObsData-2021-02-16"
+#%%
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# ++++++++++++++++++++++++++++++++CHANGES++++++++++++++++++++++++++++++++++++++
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#------------------------------------------------------------------------------
+#------------------------------- TEST DATA-------------------------------------
 
-# reading in reduced ALERT files from Reduced ALERTS folder
-reduced_ALERT_path = Path("//spcsfs/ave41/astro/ave41/ObsData-2021-02-16/ALERT/Reduced ALERT")
+# defining paths/reading in Test Data files
+ASP_test_data_path = Path("//spcsfs/ave41/astro/ave41/ASP_TestData_v1")
+WCS_test_cal_path = path_checker(ASP_test_data_path,'WCS Calibrated')
+outputs_path = path_checker(WCS_test_cal_path,'Outputs')
 
-# filtering data files to only choose 300-s exposures for Chip 3
-data_to_calibrate = [str(reduced_ALERT_path) +"/" + n 
-                      for n in os.listdir(reduced_ALERT_path) if (n.endswith('fit') 
-                      and n.__contains__('-300-') and n.__contains__('-3.')
-                      and n.__contains__('C2021_A7-'))]
-
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^CHANGES^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# defining paths to store outputs of ASP 
-WCS_cal_path = path_checker(reduced_ALERT_path,'WCS Calibrated')
-outputs_path = path_checker(WCS_cal_path,'Outputs')
+testdata = [str(ASP_test_data_path) +"/" + n for n in os.listdir(ASP_test_data_path) if (n.endswith('fit'))]
 
 # creating Calibration Log
-log_filename = "asp_log-{}.txt".format(cal_log_filename)
+log_filename = "asp_log-{}.txt".format(test_cal_log_filename)
 log_path = Path(str(outputs_path) + "\\" + log_filename)
 calibration_log = open(log_path,"w")
-
-calibration_log.write("Calibration Log for Astrometrical Calibration for {}".format(cal_log_filename)+"\n")
+calibration_log.write("Calibration Log for Astrometrical Calibration for {}".format(test_cal_log_filename)+"\n")
 calibration_log.write("Date of calibration: {}".format(date_of_calibration)+"\n")
 calibration_log.write("Reduced ALERTS to calibrate astrometrically:"+"\n")
-calibration_log.write(str(data_to_calibrate)+"\n")
-
+calibration_log.write(str(testdata)+"\n")
 spam = t.tocvalue()
 calibration_log.write(str(spam)+"\n")
 calibration_log.close()
@@ -112,6 +111,7 @@ ast = AstrometryNet()
 # https://nova.astrometry.net/api_help
 ast.api_key = "kbhqokfxlzyezitf" 
 
+#%%
 #--------------------------------------
 # Loop to read in a file from a list of files, and solve that file.
 asp(data_to_calibrate,log_path,WCS_cal_path,t,ast)

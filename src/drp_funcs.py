@@ -319,10 +319,11 @@ def img_counts(img_list,plots_path=None,plots=False):
                 if plots==True:
                     plt.figure()
                     plt.hist(image_data.flatten(),bins=NBINS,label='counts')
+                    plt.xlim(0,65000)
                     plt.axvline(x=img_min,linestyle='--',label='min {}'.format(img_min),alpha=0.5)
                     plt.axvline(x=img_max,linestyle='--',label='max {}'.format(img_max),alpha=0.5)
                     plt.axvline(x=img_mean,linestyle='-',linewidth=0.5,color='b',label='mean {:.2f}'.format(img_mean),alpha=1)
-                    plt.legend()
+                    plt.legend(loc="best")
                     plt.grid()
                     plt.xlabel('Count level in image')
                     plt.ylabel('Number of pixels with that count')

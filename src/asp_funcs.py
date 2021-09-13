@@ -82,6 +82,30 @@ def wcs_writer(wcs_header, image, WCS_cal_path):
 ###############################################################################
 
 def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
+    """
+    This function deals with solving for the astrometry for images.
+    
+    Parameters
+    ----------
+    lst_of_files : list
+        List of filenames for images.
+    
+    cal_log_path : WindowsPath object
+        Path to directory where calibration log is to be saved.
+    
+    WCS_cal_path : WindowsPath object
+        Path to directory where astrometrically-calibrated image is to be saved.
+    
+    t : TicToc object
+        Tictoc instance, for calibration log purposes.
+        
+    ast : AstrometryNet object
+        AstrometryNet instance, for solving purposes.
+    
+    Returns
+    -------
+    Nothing.
+    """
     for reduced_ALERT_file in lst_of_files:
         
         try_again = True
@@ -94,7 +118,7 @@ def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
                     print(output_msg)
                     
                     # writing Calibration Log
-                    calibration_log = open(cal_log_path,"w")
+                    calibration_log = open(cal_log_path,"a")
                     calibration_log.write(output_msg+"\n")
                     spam = t.tocvalue()
                     calibration_log.write(str(spam)+"\n")
@@ -102,18 +126,18 @@ def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
                     
                     # solving the image
                     wcs_header = ast.solve_from_image(reduced_ALERT_file,
-                                                  solve_timeout=1000,
-                                                  submission_id=submission_id,
-                                                  force_image_upload=True)
-                                                  # ra_key="RA      ",
-                                                  # dec_key="DEC     ")
+                                                      solve_timeout=1000,
+                                                      submission_id=submission_id,
+                                                      force_image_upload=True)
+                                                      # ra_key="RA      ",
+                                                      # dec_key="DEC     ")
         
                 else:
                     output_msg = "FAIL for {}!".format(reduced_ALERT_file)
                     print(output_msg)
                     
                     # writing Calibration Log
-                    calibration_log = open(cal_log_path,"w")
+                    calibration_log = open(cal_log_path,"a")
                     calibration_log.write(output_msg+"\n")
                     spam = t.tocvalue()
                     calibration_log.write(str(spam)+"\n")
@@ -127,7 +151,7 @@ def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
                 print(output_msg)
                 
                 # writing Calibration Log
-                calibration_log = open(cal_log_path,"w")
+                calibration_log = open(cal_log_path,"a")
                 calibration_log.write(output_msg+"\n")
                 spam = t.tocvalue()
                 calibration_log.write(str(spam)+"\n")
@@ -144,7 +168,7 @@ def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
             print(output_msg)
             
             # writing Calibration Log
-            calibration_log = open(cal_log_path,"w")
+            calibration_log = open(cal_log_path,"a")
             calibration_log.write(output_msg+"\n")
             spam = t.tocvalue()
             calibration_log.write(str(spam)+"\n")
@@ -158,7 +182,7 @@ def asp(lst_of_files,cal_log_path,WCS_cal_path,t,ast):
             print(output_msg)
             
             # writing Calibration Log
-            calibration_log = open(cal_log_path,"w")
+            calibration_log = open(cal_log_path,"a")
             calibration_log.write(output_msg+"\n")
             spam = t.tocvalue()
             calibration_log.write(str(spam)+"\n")
